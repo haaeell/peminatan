@@ -3,41 +3,84 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Student extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
-    protected $table = 'students';
     protected $fillable = [
-        'nis',
+        'user_id',
         'nisn',
-        'password',
-        'nama',
-        'kelas',
-        'tempat_lahir',
-        'tanggal_lahir',
-        'nama_orang_tua',
-        'mapel',
-        'total_score',
-        'average_score',
-        'ranking',
+        'nis',
+        'name',
+        'origin_class',
         'status',
-        'file_surat',
     ];
 
-
-    const STATUS_LULUS      = 'lulus';
-    const STATUS_TIDAK_LULUS = 'tidak_lulus';
-
-    public function isLulus(): bool
+    public function user()
     {
-        return $this->status === self::STATUS_LULUS;
+        return $this->belongsTo(User::class);
     }
 
-    public function getStatusLabelAttribute(): string
+    public function biodata()
     {
-        return $this->status === self::STATUS_LULUS ? 'Lulus' : 'Tidak Lulus';
+        return $this->hasOne(StudentBiodata::class);
+    }
+
+    public function selfie()
+    {
+        return $this->hasOne(StudentSelfie::class);
+    }
+
+    public function packageChoice()
+    {
+        return $this->hasOne(StudentPackageChoice::class);
+    }
+
+    public function academicAnswers()
+    {
+        return $this->hasMany(StudentAcademicAnswer::class);
+    }
+
+    public function psychologyAnswers()
+    {
+        return $this->hasMany(StudentPsychologyAnswer::class);
+    }
+
+    public function result()
+    {
+        return $this->hasOne(TestResult::class);
+    }
+
+    public function classStudent()
+    {
+        return $this->hasOne(ClassStudent::class);
+    }
+
+    public function testSessions()
+    {
+        return $this->belongsToMany(TestSession::class, 'student_test_sessions')
+            ->withPivot([
+                'started_at',
+                'finished_at',
+                'status',
+            ])
+            ->withTimestamps();
+    }
+
+    public function violations()
+    {
+        return $this->hasMany(Violation::class);
+    }
+
+    public function announcementResponses()
+    {
+        return $this->hasMany(AnnouncementResponse::class);
+    }
+
+    public function objections()
+    {
+        return $this->hasMany(Objection::class);
     }
 }

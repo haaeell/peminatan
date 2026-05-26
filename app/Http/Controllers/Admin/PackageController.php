@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Package;
+use App\Models\PackageSubject;
+use App\Services\ActivityLogService;
+use Illuminate\Http\Request;
+
+class PackageController extends Controller
+{
+    public function index()
+    {
+        $packages = Package::with('subjects')->latest()->paginate(10);
+
+        return view('admin.packages.index', compact('packages'));
+    }
+
+    public function store(Request $request, ActivityLogService $logger)
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:20', 'unique:packages,code'],
+            'name' => ['required', 'string', 'max:150'],
+            'description' => ['nullable', 'string'],
+            'capacity' => ['required', 'integer', 'min:1'],
+            'color' => ['required', 'string', 'max:20'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $package = Package::create($validated + [
+            'is_active' => $request->boolean('is_active'),
+        ]);
+
+        $logger->log('package', 'create', $package);
+
+        return back()->with('success', 'Jurusan berhasil dibuat.');
+    }
+
+    public function update(Request $request, Package $package, ActivityLogService $logger)
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:20', 'unique:packages,code,' . $package->id],
+            'name' => ['required', 'string', 'max:150'],
+            'description' => ['nullable', 'string'],
+            'capacity' => ['required', 'integer', 'min:1'],
+            'color' => ['required', 'string', 'max:20'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $package->update($validated + [
+            'is_active' => $request->boolean('is_active'),
+        ]);
+
+        $logger->log('package', 'update', $package);
+
+        return back()->with('success', 'Jurusan berhasil diperbarui.');
+    }
+
+    public function destroy(Package $package, ActivityLogService $logger)
+    {
+        $logger->log('package', 'delete', $package);
+
+        $package->delete();
+
+        return back()->with('success', 'Jurusan berhasil dihapus.');
+    }
+
+    public function storeSubject(Request $request, Package $package)
+    {
+        $validated = $request->validate([
+            'subject_name' => ['required', 'string', 'max:150'],
+        ]);
+
+        $package->subjects()->create([
+            'subject_name' => $validated['subject_name'],
+            'order' => $package->subjects()->count() + 1,
+        ]);
+
+        return back()->with('success', 'Mapel jurusan ditambahkan.');
+    }
+
+    public function destroySubject(Package $package, PackageSubject $subject)
+    {
+        abort_if($subject->package_id !== $package->id, 404);
+
+        $subject->delete();
+
+        return back()->with('success', 'Mapel jurusan dihapus.');
+    }
+}

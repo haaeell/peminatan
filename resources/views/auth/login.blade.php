@@ -1,218 +1,171 @@
-<!DOCTYPE html>
-<html lang="id">
+@extends('layouts.auth')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login — Pengumuman Kelulusan</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
-
-    <meta name="theme-color" content="#4f46e5">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        * {
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .btn-gradient {
-            background: linear-gradient(135deg, #3b82f6, #6366f1);
-            transition: all 0.2s;
-        }
-
-        .btn-gradient:hover {
-            background: linear-gradient(135deg, #2563eb, #4f46e5);
-            transform: translateY(-1px);
-            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-gradient:active {
-            transform: translateY(0);
-        }
-
-        .input-focus:focus {
-            border-color: #6366f1 !important;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-            outline: none;
-        }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #3b82f6, #6366f1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .blob-1 {
-            position: absolute;
-            top: -80px;
-            left: -80px;
-            width: 260px;
-            height: 260px;
-            background: rgba(99, 102, 241, 0.25);
-            border-radius: 50%;
-            filter: blur(40px);
-        }
-
-        .blob-2 {
-            position: absolute;
-            bottom: -80px;
-            right: -60px;
-            width: 220px;
-            height: 220px;
-            background: rgba(59, 130, 246, 0.2);
-            border-radius: 50%;
-            filter: blur(40px);
-        }
-
-        .blob-3 {
-            position: absolute;
-            top: 40%;
-            left: 50%;
-            width: 160px;
-            height: 160px;
-            background: rgba(99, 102, 241, 0.15);
-            border-radius: 50%;
-            filter: blur(30px);
-            transform: translate(-50%, -50%);
-        }
-    </style>
-</head>
-
-<body class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-
-    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col md:flex-row">
-
-        <div class="w-full md:w-1/2 p-8 sm:p-10 md:p-12 flex flex-col justify-center">
-
-            <div class="flex items-center gap-3 mb-8">
-                <img src="{{ asset('images/logo.png') }}" class="w-9 h-9 rounded-xl object-cover flex-shrink-0"
-                    alt="Logo">
-                <div>
-                    <div class="text-xs font-semibold text-gray-800 leading-tight">SMA Plus Asthahannas</div>
-                    <div class="text-[10px] text-gray-400 leading-tight">Pengumuman Kelulusan</div>
-                </div>
-            </div>
-
-            <div class="mb-7">
-                <div
-                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-semibold tracking-widest uppercase bg-blue-50 text-blue-600 border border-blue-100 mb-4">
-                    <i class="fa-solid fa-shield-halved"></i>
-                    Admin Panel
-                </div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight mb-1">
-                    Selamat Datang, <span class="gradient-text">Admin</span>
-                </h1>
-                <p class="text-sm text-gray-400">Masukkan kredensial untuk mengakses dashboard.</p>
-            </div>
-
-            @if ($errors->any())
-                <div
-                    class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-500 text-sm font-medium mb-5">
-                    <i class="fa-solid fa-circle-exclamation flex-shrink-0"></i>
-                    <span>{{ $errors->first() }}</span>
-                </div>
-            @endif
-
-            @if (session('error'))
-                <div
-                    class="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-500 text-sm font-medium mb-5">
-                    <i class="fa-solid fa-circle-exclamation flex-shrink-0"></i>
-                    <span>{{ session('error') }}</span>
-                </div>
-            @endif
-
-            <form action="/login" method="POST" class="space-y-4">
-                @csrf
-
-                <div>
-                    <label
-                        class="block text-[10px] sm:text-[11px] font-semibold tracking-widest uppercase text-gray-400 mb-2">Email</label>
-                    <div class="relative">
-                        <i
-                            class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs pointer-events-none"></i>
-                        <input type="email" name="email" placeholder="admin@sekolah.sch.id" value="{{ old('email') }}"
-                            class="input-focus w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-slate-50 text-sm text-gray-800 placeholder-gray-300 transition-all"
-                            required autocomplete="email">
-                    </div>
-                </div>
-
-                <div>
-                    <label
-                        class="block text-[10px] sm:text-[11px] font-semibold tracking-widest uppercase text-gray-400 mb-2">Password</label>
-                    <div class="relative">
-                        <i
-                            class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300 text-xs pointer-events-none"></i>
-                        <input type="password" name="password" id="passwordInput" placeholder="Masukkan password"
-                            class="input-focus w-full pl-9 pr-10 py-2.5 rounded-xl border border-gray-200 bg-slate-50 text-sm text-gray-800 placeholder-gray-300 transition-all"
-                            required autocomplete="current-password">
-                        <button type="button" onclick="togglePw()"
-                            class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 text-xs transition-colors bg-transparent border-none cursor-pointer">
-                            <i class="fa-regular fa-eye" id="pwIcon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <button type="submit"
-                    class="btn-gradient w-full py-3 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2 mt-2">
-                    <i class="fa-solid fa-right-to-bracket"></i>
-                    Masuk ke Dashboard
-                </button>
-            </form>
-
-            <p class="text-center text-xs text-gray-400 mt-6">
-                © {{ date('Y') }} · Sistem Pengumuman Kelulusan
-            </p>
-
-        </div>
+@section('content')
+    <div class="min-h-screen bg-slate-100 flex items-center justify-center px-4 py-10">
 
         <div
-            class="hidden md:flex w-full md:w-1/2 relative bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 flex-col items-center justify-center p-12 overflow-hidden">
-            <div class="blob-1"></div>
-            <div class="blob-2"></div>
-            <div class="blob-3"></div>
+            class="w-full max-w-6xl grid lg:grid-cols-2 bg-white rounded-[36px] overflow-hidden shadow-2xl shadow-blue-100 border border-slate-200">
 
-            <div class="relative z-10 text-center text-white">
-                <div
-                    class="w-20 h-20 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center mx-auto mb-6 backdrop-blur-sm">
-                    <img src="{{ asset('images/logo.png') }}" class="w-12 h-12 rounded-xl object-cover" alt="Logo">
+            {{-- Left Branding --}}
+            <div
+                class="hidden lg:flex relative bg-gradient-to-br from-blue-700 via-blue-600 to-blue-400 p-10 text-white overflow-hidden">
+
+                <div class="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10"></div>
+                <div class="absolute bottom-10 -left-16 w-64 h-64 rounded-full bg-white/10"></div>
+
+                <div class="relative z-10 flex flex-col justify-between w-full">
+                    <div>
+                        <div
+                            class="w-16 h-16 rounded-3xl bg-white/15 backdrop-blur-xl border border-white/20 flex items-center justify-center shadow-xl">
+                            <i class="fa-solid fa-graduation-cap text-3xl"></i>
+                        </div>
+
+                        <h1 class="text-4xl font-extrabold mt-8 leading-tight">
+                            Sistem Pemilihan Jurusan
+                        </h1>
+
+                        <p class="text-blue-100 mt-4 leading-relaxed max-w-md">
+                            Platform digital untuk membantu proses pemilihan jurusan siswa secara lebih tertata, aman, dan
+                            mudah digunakan.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 mt-10">
+                        <div class="bg-white/15 backdrop-blur-xl rounded-3xl p-4 border border-white/20">
+                            <i class="fa-solid fa-user-check text-2xl mb-3"></i>
+                            <p class="text-sm font-bold">Login Aman</p>
+                        </div>
+
+                        <div class="bg-white/15 backdrop-blur-xl rounded-3xl p-4 border border-white/20">
+                            <i class="fa-solid fa-file-pen text-2xl mb-3"></i>
+                            <p class="text-sm font-bold">Tes Online</p>
+                        </div>
+
+                        <div class="bg-white/15 backdrop-blur-xl rounded-3xl p-4 border border-white/20">
+                            <i class="fa-solid fa-chart-line text-2xl mb-3"></i>
+                            <p class="text-sm font-bold">Hasil Cepat</p>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <div
-                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/20 text-[10px] font-semibold tracking-widest uppercase text-white/80 mb-5 backdrop-blur-sm">
-                    <i class="fa-solid fa-graduation-cap"></i>
-                    Tahun Pelajaran {{ date('Y') - 1 }}/{{ date('Y') }}
+            {{-- Login Form --}}
+            <div class="p-6 sm:p-10 lg:p-14 flex items-center">
+                <div class="w-full max-w-md mx-auto">
+
+                    {{-- Mobile Logo --}}
+                    <div class="lg:hidden flex justify-center mb-8">
+                        <div
+                            class="w-16 h-16 rounded-3xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200">
+                            <i class="fa-solid fa-graduation-cap text-3xl"></i>
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <p class="text-sm font-bold text-blue-600 uppercase tracking-wide">
+                            Selamat Datang
+                        </p>
+
+                        <h2 class="text-3xl font-extrabold text-slate-900 mt-2">
+                            Masuk ke Akun
+                        </h2>
+
+                        <p class="text-slate-500 mt-3">
+                            Gunakan email admin atau NISN siswa untuk melanjutkan.
+                        </p>
+                    </div>
+
+                    @if ($errors->any())
+                        <div class="mb-6 rounded-2xl border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
+                            <p class="font-bold mb-1">Login gagal</p>
+                            <p>Periksa kembali email/NISN dan password kamu.</p>
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('login') }}" class="space-y-5">
+                        @csrf
+
+                        {{-- Login --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Email / NISN
+                            </label>
+
+                            <div class="relative">
+                                <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+
+                                <input type="text" name="login" value="{{ old('login') }}" required autofocus
+                                    placeholder="Masukkan email admin atau NISN"
+                                    class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800
+                                        focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+
+                            </div>
+
+                            @error('login')
+                                <p class="text-sm text-blue-700 mt-2 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Password --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">
+                                Password
+                            </label>
+
+                            <div class="relative">
+                                <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+
+                                <input type="password" name="password" id="passwordInput" required
+                                    placeholder="Masukkan password"
+                                    class="w-full pl-11 pr-12 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800
+                                        focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+
+                                <button type="button" id="togglePassword"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+
+                            @error('password')
+                                <p class="text-sm text-blue-700 mt-2 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        {{-- Submit --}}
+                        <button
+                            class="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700
+                                text-white font-extrabold shadow-lg shadow-blue-200 transition-all duration-300 hover:-translate-y-0.5">
+
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                            Masuk
+                        </button>
+                    </form>
+
+                    <div class="mt-8 text-center text-sm text-slate-400">
+                        © {{ date('Y') }} Sistem Pemilihan Jurusan
+                    </div>
                 </div>
-
-                <h2 class="text-2xl md:text-3xl font-bold leading-tight mb-3">
-                    Sistem Pengumuman<br>Kelulusan Siswa
-                </h2>
-                <p class="text-sm text-white/70 leading-relaxed max-w-xs mx-auto">
-                    Kelola data siswa, atur tanggal pengumuman, dan pantau hasil kelulusan secara terpusat.
-                </p>
             </div>
         </div>
-
     </div>
+@endsection
 
+@push('scripts')
     <script>
-        function togglePw() {
-            const inp = document.getElementById('passwordInput');
-            const icon = document.getElementById('pwIcon');
-            if (inp.type === 'password') {
-                inp.type = 'text';
-                icon.className = 'fa-regular fa-eye-slash';
-            } else {
-                inp.type = 'password';
-                icon.className = 'fa-regular fa-eye';
+        document.addEventListener('DOMContentLoaded', function () {
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('passwordInput');
+
+            if (togglePassword && passwordInput) {
+                togglePassword.addEventListener('click', function () {
+                    const isPassword = passwordInput.type === 'password';
+
+                    passwordInput.type = isPassword ? 'text' : 'password';
+                    this.innerHTML = isPassword
+                        ? '<i class="fa-solid fa-eye-slash"></i>'
+                        : '<i class="fa-solid fa-eye"></i>';
+                });
             }
-        }
+        });
     </script>
-
-</body>
-
-</html>
+@endpush
