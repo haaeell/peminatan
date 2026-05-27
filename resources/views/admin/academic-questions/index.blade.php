@@ -33,7 +33,7 @@
 
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900">Import Soal</h2>
-                        <p class="text-sm text-slate-500">Upload soal akademik via CSV.</p>
+                        <p class="text-sm text-slate-500">Upload soal akademik via Excel dengan dukungan gambar soal.</p>
                     </div>
                 </div>
 
@@ -50,9 +50,13 @@
                         class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
                         text-white py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition">
                         <i class="fa-solid fa-upload"></i>
-                        Import CSV
+                        Import Excel
                     </button>
                 </form>
+
+                <div class="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700 leading-relaxed">
+                    Format template mendukung kolom <span class="font-bold">image_url</span> untuk gambar soal.
+                </div>
 
                 <div class="grid grid-cols-2 gap-3 mt-4">
                     <a href="{{ route('admin.academic-questions.template') }}"
@@ -95,7 +99,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('admin.academic-questions.store') }}" class="space-y-4">
+                <form method="POST" action="{{ route('admin.academic-questions.store') }}" enctype="multipart/form-data" class="space-y-4">
                     @csrf
 
                     <div>
@@ -103,6 +107,15 @@
                         <textarea name="question" rows="5" placeholder="Tulis soal akademik di sini..."
                             class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800
                             focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">{{ old('question') }}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Gambar Soal</label>
+                        <input type="file" name="image" accept="image/*"
+                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700
+                            file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0
+                            file:bg-blue-600 file:text-white file:font-bold">
+                        <p class="text-xs text-slate-500 mt-2">Opsional. Format JPG, PNG, WEBP, maksimal 2 MB.</p>
                     </div>
 
                     <div class="space-y-3">
@@ -201,6 +214,11 @@
                                     <p class="font-bold text-slate-900 leading-relaxed">
                                         {{ $question->question }}
                                     </p>
+
+                                    @if($question->image_path)
+                                        <img src="{{ asset('storage/' . $question->image_path) }}" alt="Gambar soal akademik"
+                                            class="mt-4 w-full max-w-xl rounded-2xl border border-slate-200 object-contain bg-slate-50">
+                                    @endif
                                 </div>
                             </div>
 

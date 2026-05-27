@@ -2,11 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\AcademicQuestionsExport;
+use App\Exports\AcademicQuestionsTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Imports\AcademicQuestionsImport;
 use App\Models\AcademicQuestion;
 use App\Services\ActivityLogService;
+use App\Services\QuestionImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AcademicQuestionController extends Controller
 {
@@ -23,6 +28,7 @@ class AcademicQuestionController extends Controller
     {
         $validated = $request->validate([
             'question' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'max:2048'],
             'options' => ['required', 'array'],
             'options.A' => ['required', 'string'],
             'options.B' => ['required', 'string'],
@@ -35,6 +41,7 @@ class AcademicQuestionController extends Controller
         DB::transaction(function () use ($validated, $request, $logger) {
             $question = AcademicQuestion::create([
                 'question' => $validated['question'],
+                'image_path' => app(QuestionImageService::class)->storeUploaded($request->file('image')),
                 'order' => AcademicQuestion::max('order') + 1,
                 'is_active' => $request->boolean('is_active'),
             ]);
@@ -76,117 +83,30 @@ class AcademicQuestionController extends Controller
 
     public function downloadTemplate()
     {
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="template_soal_akademik.csv"',
-        ];
-
-        $callback = function () {
-            $file = fopen('php://output', 'w');
-
-            fputcsv($file, [
-                'question',
-                'option_a',
-                'option_b',
-                'option_c',
-                'option_d',
-                'correct_answer',
-            ]);
-
-            fputcsv($file, [
-                'Contoh soal akademik?',
-                'Jawaban A',
-                'Jawaban B',
-                'Jawaban C',
-                'Jawaban D',
-                'A',
-            ]);
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return Excel::download(
+            new AcademicQuestionsTemplateExport(),
+            'template_soal_akademik.xlsx'
+        );
     }
 
     public function export()
     {
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="soal_akademik.csv"',
-        ];
-
-        $callback = function () {
-            $file = fopen('php://output', 'w');
-
-            fputcsv($file, [
-                'question',
-                'option_a',
-                'option_b',
-                'option_c',
-                'option_d',
-                'correct_answer',
-            ]);
-
-            AcademicQuestion::with('options')->chunk(100, function ($questions) use ($file) {
-                foreach ($questions as $question) {
-                    $options = $question->options->keyBy('label');
-
-                    fputcsv($file, [
-                        $question->question,
-                        $options['A']->option_text ?? '',
-                        $options['B']->option_text ?? '',
-                        $options['C']->option_text ?? '',
-                        $options['D']->option_text ?? '',
-                        $question->options->firstWhere('is_correct', true)?->label,
-                    ]);
-                }
-            });
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return Excel::download(
+            new AcademicQuestionsExport(),
+            'soal_akademik.xlsx'
+        );
     }
 
-    public function import(Request $request)
+    public function import(Request $request, ActivityLogService $logger, QuestionImageService $imageService)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
         ]);
 
-        $path = $request->file('file')->getRealPath();
-        $file = fopen($path, 'r');
-
-        $header = fgetcsv($file);
-
-        DB::transaction(function () use ($file) {
-            while (($row = fgetcsv($file)) !== false) {
-                [$questionText, $a, $b, $c, $d, $correct] = $row;
-
-                $question = AcademicQuestion::create([
-                    'question' => $questionText,
-                    'order' => AcademicQuestion::max('order') + 1,
-                    'is_active' => true,
-                ]);
-
-                foreach (
-                    [
-                        'A' => $a,
-                        'B' => $b,
-                        'C' => $c,
-                        'D' => $d,
-                    ] as $label => $text
-                ) {
-                    $question->options()->create([
-                        'label' => $label,
-                        'option_text' => $text,
-                        'is_correct' => strtoupper($correct) === $label,
-                    ]);
-                }
-            }
-        });
-
-        fclose($file);
+        Excel::import(new AcademicQuestionsImport($imageService), $request->file('file'));
+        $logger->log('academic_question', 'import', null, [
+            'filename' => $request->file('file')->getClientOriginalName(),
+        ]);
 
         return back()->with('success', 'Import soal akademik berhasil.');
     }

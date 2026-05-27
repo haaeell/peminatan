@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ExamMonitoringController;
 use App\Http\Controllers\Admin\PackageController;
 use App\Http\Controllers\Admin\PsychologyQuestionController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\StudentController;
 use App\Http\Controllers\Admin\TestSessionController;
@@ -197,6 +198,15 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/test-results/manual-update', [TestResultController::class, 'manualUpdate'])->name('test-results.manual-update');
         Route::get('/test-results/export', [TestResultController::class, 'export'])->name('test-results.export');
 
+        Route::get('/reports', [ReportController::class, 'index'])
+            ->name('reports.index');
+
+        Route::get('/reports/{type}/excel', [ReportController::class, 'exportExcel'])
+            ->name('reports.excel');
+
+        Route::get('/reports/{type}/pdf', [ReportController::class, 'exportPdf'])
+            ->name('reports.pdf');
+
         Route::get('/violations', [AdminViolationController::class, 'index'])
             ->name('violations.index');
 
@@ -278,6 +288,9 @@ Route::middleware(['auth', 'role:siswa'])
 
         Route::post('/announcements/{announcement}/accept', [SiswaAnnouncementController::class, 'accept'])
             ->name('announcements.accept');
+
+        Route::get('/announcements/{announcement}/letter', [SiswaAnnouncementController::class, 'downloadLetter'])
+            ->name('announcements.letter');
 
         Route::post('/announcements/{announcement}/object', [ObjectionController::class, 'store'])
             ->name('announcements.object');

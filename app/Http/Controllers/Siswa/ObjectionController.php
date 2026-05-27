@@ -13,13 +13,14 @@ class ObjectionController extends Controller
 {
     public function store(Request $request, Announcement $announcement)
     {
+        $student = auth()->user()->student;
+
+        abort_if($student->status !== 'completed', 403, 'Pengumuman belum tersedia untuk status Anda.');
         abort_if(!$announcement->is_published, 404);
 
         $validated = $request->validate([
             'reason' => ['required', 'string', 'min:10'],
         ]);
-
-        $student = auth()->user()->student;
 
         DB::transaction(function () use ($announcement, $student, $validated) {
             AnnouncementResponse::updateOrCreate(

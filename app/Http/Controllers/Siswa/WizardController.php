@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Siswa;
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Models\Package;
+use App\Models\Student;
 use App\Models\StudentPackageChoice;
 use App\Models\TestSession;
 use Illuminate\Http\Request;
@@ -20,6 +21,10 @@ class WizardController extends Controller
             'selfie',
             'packageChoice',
         ])->firstOrFail();
+
+        if (!in_array($student->status, ['onboarding', 'biodata', 'package_choice', 'selfie'], true)) {
+            return redirect()->route($this->studentRoute($student));
+        }
 
         $announcement = Announcement::query()
             ->where('is_published', true)
@@ -136,6 +141,10 @@ class WizardController extends Controller
     {
         $student = auth()->user()->student;
 
+        if ($student->status !== 'waiting_session') {
+            return redirect()->route($this->studentRoute($student));
+        }
+
         $session = TestSession::where('is_active', true)
             ->whereHas('classes', function ($query) use ($student) {
                 $query->where('origin_class', $student->origin_class);
@@ -145,5 +154,16 @@ class WizardController extends Controller
             ->first();
 
         return view('siswa.waiting-session', compact('student', 'session'));
+    }
+
+    private function studentRoute(Student $student): string
+    {
+        return match ($student->status) {
+            'waiting_session' => 'siswa.waiting-session',
+            'academic_test' => 'siswa.academic.index',
+            'psychology_test' => 'siswa.psychology.index',
+            'completed' => 'siswa.announcements.index',
+            default => 'siswa.wizard.index',
+        };
     }
 }

@@ -73,6 +73,11 @@
                             <h2 class="font-extrabold text-lg md:text-xl text-slate-900 leading-relaxed">
                                 {{ $question->question }}
                             </h2>
+
+                            @if($question->image_path)
+                                <img src="{{ asset('storage/' . $question->image_path) }}" alt="Gambar soal {{ $index + 1 }}"
+                                    class="mt-4 w-full max-w-2xl rounded-[24px] border border-slate-200 bg-slate-50 object-contain">
+                            @endif
                         </div>
                     </div>
 

@@ -33,11 +33,33 @@
 
                     <div>
                         <h2 class="text-xl font-extrabold text-slate-900">File Data</h2>
-                        <p class="text-sm text-slate-500">Download template atau export data.</p>
+                        <p class="text-sm text-slate-500">Import, download template, atau export data psikotes.</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <form method="POST" action="{{ route('admin.psychology-questions.import') }}"
+                    enctype="multipart/form-data" class="space-y-4">
+                    @csrf
+
+                    <input type="file" name="file" accept=".csv,.xlsx,.xls"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700
+                        file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0
+                        file:bg-blue-600 file:text-white file:font-bold">
+
+                    <button
+                        class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
+                        text-white py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition">
+                        <i class="fa-solid fa-upload"></i>
+                        Import Excel
+                    </button>
+                </form>
+
+                <div class="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-xs text-blue-700 leading-relaxed">
+                    Gunakan kolom <span class="font-bold">question_group</span> untuk mengelompokkan opsi A-D dan
+                    <span class="font-bold">image_url</span> bila soal memakai gambar.
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mt-4">
                     <a href="{{ route('admin.psychology-questions.template') }}"
                         class="inline-flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100
                         text-blue-700 py-3 rounded-2xl font-bold transition">
@@ -78,7 +100,7 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('admin.psychology-questions.store') }}" class="space-y-5">
+                <form method="POST" action="{{ route('admin.psychology-questions.store') }}" enctype="multipart/form-data" class="space-y-5">
                     @csrf
 
                     <div>
@@ -89,6 +111,15 @@
                         <textarea name="question" rows="5" placeholder="Tulis pernyataan psikotes di sini..."
                             class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800
                             focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">{{ old('question') }}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Gambar Soal</label>
+                        <input type="file" name="image" accept="image/*"
+                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700
+                            file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0
+                            file:bg-blue-600 file:text-white file:font-bold">
+                        <p class="text-xs text-slate-500 mt-2">Opsional. Format JPG, PNG, WEBP, maksimal 2 MB.</p>
                     </div>
 
                     <div class="space-y-4">
@@ -195,6 +226,11 @@
                                     <p class="font-bold text-slate-900 leading-relaxed">
                                         {{ $question->question }}
                                     </p>
+
+                                    @if($question->image_path)
+                                        <img src="{{ asset('storage/' . $question->image_path) }}" alt="Gambar soal psikotes"
+                                            class="mt-4 w-full max-w-xl rounded-2xl border border-slate-200 object-contain bg-slate-50">
+                                    @endif
                                 </div>
                             </div>
 

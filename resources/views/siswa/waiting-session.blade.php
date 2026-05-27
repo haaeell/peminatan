@@ -79,10 +79,16 @@
                 @endif
 
                 <div class="grid sm:grid-cols-2 gap-3">
-                    <a href="{{ route('siswa.academic.index') }}"
+                    @php
+                        $sessionEntryRoute = $session?->test_type === 'psychology'
+                            ? route('siswa.psychology.index')
+                            : route('siswa.academic.index');
+                    @endphp
+
+                    <a href="{{ $sessionEntryRoute }}"
                         class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-200 transition">
                         <i class="fa-solid fa-right-to-bracket"></i>
-                        Coba Masuk Tes
+                        Masuk ke Sesi Tes
                     </a>
 
                     <a href="{{ route('siswa.wizard.index') }}"

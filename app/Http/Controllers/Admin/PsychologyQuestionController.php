@@ -2,12 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\PsychologyQuestionsExport;
+use App\Exports\PsychologyQuestionsTemplateExport;
 use App\Http\Controllers\Controller;
+use App\Imports\PsychologyQuestionsImport;
 use App\Models\Package;
 use App\Models\PsychologyQuestion;
 use App\Services\ActivityLogService;
+use App\Services\QuestionImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PsychologyQuestionController extends Controller
 {
@@ -29,6 +34,7 @@ class PsychologyQuestionController extends Controller
     {
         $validated = $request->validate([
             'question' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'max:2048'],
             'options' => ['required', 'array'],
             'options.A.text' => ['required', 'string'],
             'options.B.text' => ['required', 'string'],
@@ -41,6 +47,7 @@ class PsychologyQuestionController extends Controller
         DB::transaction(function () use ($validated, $request, $logger) {
             $question = PsychologyQuestion::create([
                 'question' => $validated['question'],
+                'image_path' => app(QuestionImageService::class)->storeUploaded($request->file('image')),
                 'order' => PsychologyQuestion::max('order') + 1,
                 'is_active' => $request->boolean('is_active'),
             ]);
@@ -94,133 +101,32 @@ class PsychologyQuestionController extends Controller
     {
         $packages = Package::where('is_active', true)->get();
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="template_soal_psikotes.csv"',
-        ];
-
-        $callback = function () use ($packages) {
-            $file = fopen('php://output', 'w');
-
-            $header = ['question', 'option_label', 'option_text'];
-
-            foreach ($packages as $package) {
-                $header[] = 'weight_' . $package->code;
-            }
-
-            fputcsv($file, $header);
-
-            fputcsv($file, [
-                'Saya lebih suka aktivitas...',
-                'A',
-                'Eksperimen dan sains',
-                10,
-                3,
-                0,
-            ]);
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return Excel::download(
+            new PsychologyQuestionsTemplateExport($packages),
+            'template_soal_psikotes.xlsx'
+        );
     }
 
     public function export()
     {
         $packages = Package::where('is_active', true)->get();
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="soal_psikotes.csv"',
-        ];
-
-        $callback = function () use ($packages) {
-            $file = fopen('php://output', 'w');
-
-            $header = ['question', 'option_label', 'option_text'];
-
-            foreach ($packages as $package) {
-                $header[] = 'weight_' . $package->code;
-            }
-
-            fputcsv($file, $header);
-
-            PsychologyQuestion::with('options.weights.package')->chunk(100, function ($questions) use ($file, $packages) {
-                foreach ($questions as $question) {
-                    foreach ($question->options as $option) {
-                        $row = [
-                            $question->question,
-                            $option->label,
-                            $option->option_text,
-                        ];
-
-                        foreach ($packages as $package) {
-                            $weight = $option->weights
-                                ->firstWhere('package_id', $package->id)
-                                ?->weight ?? 0;
-
-                            $row[] = $weight;
-                        }
-
-                        fputcsv($file, $row);
-                    }
-                }
-            });
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return Excel::download(
+            new PsychologyQuestionsExport($packages),
+            'soal_psikotes.xlsx'
+        );
     }
 
-    public function import(Request $request)
+    public function import(Request $request, ActivityLogService $logger, QuestionImageService $imageService)
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
         ]);
 
-        $packages = Package::where('is_active', true)->get();
-
-        $path = $request->file('file')->getRealPath();
-        $file = fopen($path, 'r');
-
-        $header = fgetcsv($file);
-
-        DB::transaction(function () use ($file, $packages) {
-            $questionMap = [];
-
-            while (($row = fgetcsv($file)) !== false) {
-                $questionText = $row[0];
-                $label = strtoupper($row[1]);
-                $optionText = $row[2];
-
-                if (!isset($questionMap[$questionText])) {
-                    $questionMap[$questionText] = PsychologyQuestion::create([
-                        'question' => $questionText,
-                        'order' => PsychologyQuestion::max('order') + 1,
-                        'is_active' => true,
-                    ]);
-                }
-
-                $question = $questionMap[$questionText];
-
-                $option = $question->options()->create([
-                    'label' => $label,
-                    'option_text' => $optionText,
-                ]);
-
-                foreach ($packages as $index => $package) {
-                    $weight = $row[3 + $index] ?? 0;
-
-                    $option->weights()->create([
-                        'package_id' => $package->id,
-                        'weight' => (int) $weight,
-                    ]);
-                }
-            }
-        });
-
-        fclose($file);
+        Excel::import(new PsychologyQuestionsImport($imageService), $request->file('file'));
+        $logger->log('psychology_question', 'import', null, [
+            'filename' => $request->file('file')->getClientOriginalName(),
+        ]);
 
         return back()->with('success', 'Import soal psikotes berhasil.');
     }

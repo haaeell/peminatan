@@ -33,6 +33,13 @@ class EnsureStudentTestSessionIsOpen
         }
 
         $examType = $request->routeIs('siswa.psychology.*') ? 'psychology' : 'academic';
+
+        if (!in_array($session->test_type, [$examType, 'both'], true)) {
+            return redirect()
+                ->route('siswa.waiting-session')
+                ->with('warning', 'Jenis tes pada sesi ini belum tersedia untuk Anda.');
+        }
+
         $now = now();
 
         $pivot = DB::table('student_test_sessions')

@@ -326,6 +326,12 @@
 
                 <div class="menu-title">Laporan</div>
 
+                <a href="{{ route('admin.reports.index') }}"
+                    class=" sidebar-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-file-arrow-down"></i>
+                    <span>Laporan</span>
+                </a>
+
                 <a href="{{ route('admin.test-results.index') }}"
                     class=" sidebar-link {{ request()->routeIs('admin.test-results.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-square-poll-vertical"></i>

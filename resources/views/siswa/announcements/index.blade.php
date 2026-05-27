@@ -111,9 +111,21 @@
                             </button>
                         </form>
                     @elseif($response)
-                        <div class="bg-blue-50 border border-blue-100 text-blue-700 rounded-[28px] p-5">
-                            Respons Anda:
-                            <b>{{ $response->response }}</b>
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 border border-blue-100 text-blue-700 rounded-[28px] p-5">
+                                <p class="font-bold">Respons Anda: {{ $response->response === 'accepted' ? 'Diterima' : 'Mengajukan keberatan' }}</p>
+                                @if($response->responded_at)
+                                    <p class="text-sm mt-1">Dikirim pada {{ $response->responded_at->translatedFormat('d F Y H:i') }}</p>
+                                @endif
+                            </div>
+
+                            @if($response->response === 'accepted' && $classStudent)
+                                <a href="{{ route('siswa.announcements.letter', $announcement) }}"
+                                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-200 transition">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                    Download Surat Keterangan PDF
+                                </a>
+                            @endif
                         </div>
                     @endif
                 @endif
