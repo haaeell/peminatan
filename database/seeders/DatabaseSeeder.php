@@ -18,8 +18,6 @@ class DatabaseSeeder extends Seeder
                 'activity_logs',
                 'violations',
                 'objections',
-                'announcement_responses',
-                'announcements',
                 'class_students',
                 'class_groups',
                 'test_results',
@@ -57,7 +55,6 @@ class DatabaseSeeder extends Seeder
             $this->seedSampleStudents();
             $this->seedAcademicQuestions();
             $this->seedPsychologyQuestions($packages);
-            $this->seedAnnouncement($adminId);
         });
     }
 
@@ -596,18 +593,6 @@ class DatabaseSeeder extends Seeder
                 }
             }
         }
-    }
-
-    private function seedAnnouncement(int $adminId): void
-    {
-        DB::table('announcements')->insert($this->timestampedRow([
-            'type' => 'temporary',
-            'title' => 'Informasi Pengumuman Hasil Peminatan',
-            'content' => 'Pengumuman hasil akan dipublikasikan oleh admin setelah proses tes dan distribusi kelas selesai.',
-            'is_published' => true,
-            'published_at' => now(),
-            'published_by' => $adminId,
-        ]));
     }
 
     private function timestampedRow(array $row): array
