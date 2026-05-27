@@ -92,6 +92,156 @@
             border-radius: 10px !important;
             border: none !important;
         }
+
+        #testResultsTable_wrapper {
+            width: 100%;
+        }
+
+        #testResultsTable_wrapper .dt-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        #testResultsTable_wrapper .dt-length,
+        #testResultsTable_wrapper .dt-search {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #testResultsTable_wrapper .dt-length label,
+        #testResultsTable_wrapper .dt-search label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        #testResultsTable_wrapper .dt-length select {
+            width: 82px;
+            height: 42px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 0 12px;
+            outline: none;
+        }
+
+        #testResultsTable_wrapper .dt-search input {
+            width: 320px;
+            height: 42px;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            padding: 0 14px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        #testResultsTable_wrapper .dt-search input:focus,
+        #testResultsTable_wrapper .dt-length select:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 4px #dbeafe;
+            background: #ffffff;
+        }
+
+        #testResultsTable {
+            width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 0 10px !important;
+        }
+
+        #testResultsTable thead th {
+            background: #f8fafc !important;
+            color: #64748b !important;
+            font-size: 12px !important;
+            font-weight: 800 !important;
+            padding: 14px 16px !important;
+            border: none !important;
+        }
+
+        #testResultsTable tbody tr {
+            background: #ffffff !important;
+            box-shadow: 0 1px 0 #e2e8f0;
+        }
+
+        #testResultsTable tbody td {
+            padding: 16px !important;
+            border: none !important;
+            vertical-align: middle !important;
+        }
+
+        #testResultsTable tbody tr:hover {
+            background: #f8fafc !important;
+        }
+
+        #testResultsTable tbody tr td:first-child {
+            border-radius: 16px 0 0 16px;
+        }
+
+        #testResultsTable tbody tr td:last-child {
+            border-radius: 0 16px 16px 0;
+        }
+
+        #testResultsTable_wrapper .dt-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        #testResultsTable_wrapper .dt-info {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        #testResultsTable_wrapper .dt-paging {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #testResultsTable_wrapper .dt-paging .dt-paging-button {
+            min-width: 36px;
+            height: 36px;
+            border-radius: 12px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            color: #475569 !important;
+            font-weight: 700;
+        }
+
+        #testResultsTable_wrapper .dt-paging .dt-paging-button.current {
+            background: #2563eb !important;
+            color: #ffffff !important;
+            border-color: #2563eb !important;
+        }
+
+        #testResultsTable_wrapper .dt-paging .dt-paging-button:hover {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border-color: #bfdbfe !important;
+        }
+
+        @media (max-width: 768px) {
+
+            #testResultsTable_wrapper .dt-top,
+            #testResultsTable_wrapper .dt-bottom {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            #testResultsTable_wrapper .dt-search input {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 
@@ -119,7 +269,7 @@
             <nav class="flex-1 overflow-y-auto px-4 py-5">
 
                 <a href="{{ route('admin.dashboard') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
@@ -127,13 +277,13 @@
                 <div class="menu-title">Master Data</div>
 
                 <a href="{{ route('admin.students.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-users"></i>
                     <span>Siswa</span>
                 </a>
 
                 <a href="{{ route('admin.packages.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-layer-group"></i>
                     <span>Jurusan</span>
                 </a>
@@ -141,25 +291,25 @@
                 <div class="menu-title">Tes CBT</div>
 
                 <a href="{{ route('admin.test-sessions.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.test-sessions.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.test-sessions.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-clock"></i>
                     <span>Sesi Tes</span>
                 </a>
 
                 <a href="{{ route('admin.academic-questions.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.academic-questions.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.academic-questions.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-book-open"></i>
                     <span>Soal Akademik</span>
                 </a>
 
                 <a href="{{ route('admin.psychology-questions.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.psychology-questions.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.psychology-questions.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-brain"></i>
                     <span>Soal Psikologi</span>
                 </a>
 
                 <a href="{{ route('admin.violations.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.violations.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.violations.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>Pelanggaran CBT</span>
                 </a>
@@ -167,19 +317,19 @@
                 <div class="menu-title">Laporan</div>
 
                 <a href="{{ route('admin.test-results.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.test-results.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.test-results.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-square-poll-vertical"></i>
                     <span>Hasil Tes</span>
                 </a>
 
                 <a href="{{ route('admin.activity-logs.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.activity-logs.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.activity-logs.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-clock-rotate-left"></i>
                     <span>Audit Log</span>
                 </a>
 
                 <a href="{{ route('admin.class-distribution.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.class-distribution.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.class-distribution.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-random"></i>
                     <span>Distribusi Kelas</span>
                 </a>
@@ -187,13 +337,13 @@
                 <div class="menu-title">Komunikasi</div>
 
                 <a href="{{ route('admin.announcements.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-bullhorn"></i>
                     <span>Pengumuman</span>
                 </a>
 
                 <a href="{{ route('admin.objections.index') }}"
-                    class="sidebar-link {{ request()->routeIs('admin.objections.*') ? 'active' : '' }}">
+                    class=" sidebar-link {{ request()->routeIs('admin.objections.*') ? 'active' : '' }}">
                     <i class="fa-solid fa-message"></i>
                     <span>Keberatan</span>
                 </a>
@@ -266,13 +416,13 @@
                         </div>
                         <div>
                             <p class="font-bold">Berhasil</p>
-                            <p class="text-sm">{{ session('success') }}</p>
+                                <p class=" text-sm">{{ session('success') }}</p>
                         </div>
-                    </div>
+                            </div>
                 @endif
 
-                <div class="bg-white rounded-[28px] border border-slate-200 shadow-sm p-5 md:p-6">
-                    @yield('content')
+                    <div class="bg-white rounded-[28px] border border-slate-200 shadow-sm p-5 md:p-6">
+                        @yield('content')
                 </div>
 
             </section>

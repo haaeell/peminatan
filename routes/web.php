@@ -187,17 +187,10 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/objections/{objection}/reject', [AdminObjectionController::class, 'reject'])
             ->name('objections.reject');
 
-        Route::get('/test-results', [TestResultController::class, 'index'])
-            ->name('test-results.index');
-
-        Route::post('/test-results/distribute', [TestResultController::class, 'distribute'])
-            ->name('test-results.distribute');
-
-        Route::post('/test-results/manual-update', [TestResultController::class, 'manualUpdate'])
-            ->name('test-results.manual-update');
-
-        Route::get('/test-results/export', [TestResultController::class, 'export'])
-            ->name('test-results.export');
+        Route::get('/test-results', [TestResultController::class, 'index'])->name('test-results.index');
+        Route::get('/test-results/data', [TestResultController::class, 'data'])->name('test-results.data');
+        Route::post('/test-results/manual-update', [TestResultController::class, 'manualUpdate'])->name('test-results.manual-update');
+        Route::get('/test-results/export', [TestResultController::class, 'export'])->name('test-results.export');
 
         Route::get('/violations', [AdminViolationController::class, 'index'])
             ->name('violations.index');
