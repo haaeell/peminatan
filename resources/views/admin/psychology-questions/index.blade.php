@@ -191,16 +191,31 @@
                     <h2 class="text-xl font-extrabold text-slate-900">Daftar Soal Psikotes</h2>
                     <p class="text-sm text-slate-500">Preview pilihan jawaban dan bobot tiap jurusan.</p>
                 </div>
+
+                <form method="GET" class="flex items-center gap-3">
+                    <label class="text-sm font-semibold text-slate-500">Tampilkan</label>
+                    <select name="per_page" onchange="this.form.submit()"
+                        class="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800">
+                        @foreach(['10' => '10', '25' => '25', '50' => '50', 'all' => 'Semua'] as $value => $label)
+                            <option value="{{ $value }}" {{ request('per_page', '10') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </form>
             </div>
 
             <div class="space-y-4">
                 @forelse($questions as $question)
+                    @php
+                        $questionNumber = method_exists($questions, 'firstItem')
+                            ? $questions->firstItem() + $loop->index
+                            : $loop->iteration;
+                    @endphp
                     <div class="border border-slate-200 rounded-[26px] p-5 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300">
 
                         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                             <div class="flex gap-4">
                                 <div class="w-12 h-12 shrink-0 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-extrabold shadow-lg shadow-blue-200">
-                                    {{ $loop->iteration }}
+                                    {{ $questionNumber }}
                                 </div>
 
                                 <div>
@@ -234,21 +249,43 @@
                                 </div>
                             </div>
 
-                            <form id="delete-psychology-question-{{ $question->id }}" method="POST"
-                                action="{{ route('admin.psychology-questions.destroy', $question) }}">
-                                @csrf
-                                @method('DELETE')
-
+                            <div class="flex items-center gap-2">
                                 <button type="button"
-                                    onclick="confirmDelete('delete-psychology-question-{{ $question->id }}')"
-                                    class="group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl
-                                    bg-white text-slate-500 border border-slate-200
+                                    class="editPsychologyQuestionBtn group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl
+                                    bg-blue-50 text-blue-700 border border-blue-100
                                     hover:bg-blue-600 hover:text-white hover:border-blue-600
-                                    shadow-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300">
-                                    <i class="fa-solid fa-trash-can group-hover:scale-110 transition-transform"></i>
-                                    <span class="text-sm font-bold">Hapus</span>
+                                    shadow-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300"
+                                    data-id="{{ $question->id }}"
+                                    data-question="{{ e($question->question) }}"
+                                    data-image="{{ $question->image_path ? asset('storage/' . $question->image_path) : '' }}"
+                                    data-active="{{ $question->is_active ? 1 : 0 }}"
+                                    @foreach(['A', 'B', 'C', 'D'] as $label)
+                                        data-option-{{ strtolower($label) }}="{{ e(optional($question->options->firstWhere('label', $label))->option_text) }}"
+                                        @foreach($packages as $package)
+                                            data-weight-{{ strtolower($label) }}-{{ $package->id }}="{{ optional(optional($question->options->firstWhere('label', $label))->weights->firstWhere('package_id', $package->id))->weight ?? 0 }}"
+                                        @endforeach
+                                    @endforeach
+                                >
+                                    <i class="fa-solid fa-pen-to-square group-hover:scale-110 transition-transform"></i>
+                                    <span class="text-sm font-bold">Edit</span>
                                 </button>
-                            </form>
+
+                                <form id="delete-psychology-question-{{ $question->id }}" method="POST"
+                                    action="{{ route('admin.psychology-questions.destroy', $question) }}">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="button"
+                                        onclick="confirmDelete('delete-psychology-question-{{ $question->id }}')"
+                                        class="group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl
+                                        bg-white text-slate-500 border border-slate-200
+                                        hover:bg-blue-600 hover:text-white hover:border-blue-600
+                                        shadow-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300">
+                                        <i class="fa-solid fa-trash-can group-hover:scale-110 transition-transform"></i>
+                                        <span class="text-sm font-bold">Hapus</span>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
 
                         <div class="space-y-3 mt-5">
@@ -304,4 +341,111 @@
         </div>
     </div>
 
+    <div id="editPsychologyQuestionModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-[28px] p-6 w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="font-extrabold text-xl text-slate-900">Edit Soal Psikotes</h2>
+                    <p class="text-sm text-slate-500">Perbarui pernyataan, gambar, opsi, dan bobot jurusan.</p>
+                </div>
+                <button type="button" id="closePsychologyQuestionModal"
+                    class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="editPsychologyQuestionForm" method="POST" enctype="multipart/form-data" class="space-y-5">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Pernyataan Psikotes</label>
+                    <textarea name="question" id="edit_psychology_question" rows="4"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Gambar Soal Baru</label>
+                    <input type="file" name="image" accept="image/*"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700
+                        file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0
+                        file:bg-blue-600 file:text-white file:font-bold">
+                    <img id="edit_psychology_image_preview" class="hidden mt-3 w-full max-w-md rounded-2xl border border-slate-200 bg-slate-50 object-contain">
+                </div>
+                <div class="space-y-4">
+                    @foreach(['A', 'B', 'C', 'D'] as $label)
+                        <div class="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+                            <div class="font-extrabold text-slate-900 mb-3">Pilihan {{ $label }}</div>
+                            <input name="options[{{ $label }}][text]" id="edit_psychology_option_{{ strtolower($label) }}"
+                                class="w-full px-4 py-3 rounded-2xl bg-white border border-slate-200 text-slate-800">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                                @foreach($packages as $package)
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-500 mb-1">{{ $package->code }}</label>
+                                        <input type="number" name="options[{{ $label }}][weights][{{ $package->id }}]"
+                                            id="edit_psychology_weight_{{ strtolower($label) }}_{{ $package->id }}"
+                                            class="w-full px-3 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-800">
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <label class="flex items-center gap-3 p-4 rounded-2xl bg-blue-50 text-slate-700">
+                    <input type="checkbox" name="is_active" value="1" id="edit_psychology_is_active"
+                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    <span class="font-semibold text-sm">Soal aktif dan bisa digunakan</span>
+                </label>
+                <button
+                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
+                    text-white py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition">
+                    <i class="fa-solid fa-save"></i>
+                    Update Soal
+                </button>
+            </form>
+        </div>
+    </div>
+
 @endsection
+
+@push('scripts')
+    <script>
+        $(function () {
+            const updateUrlTemplate = @json(route('admin.psychology-questions.update', ['psychology_question' => '__ID__']));
+
+            $('.editPsychologyQuestionBtn').on('click', function () {
+                const id = $(this).data('id');
+                $('#editPsychologyQuestionForm').attr('action', updateUrlTemplate.replace('__ID__', id));
+                $('#edit_psychology_question').val($(this).data('question') || '');
+                $('#edit_psychology_is_active').prop('checked', Number($(this).data('active')) === 1);
+
+                ['a', 'b', 'c', 'd'].forEach(function (label) {
+                    $('#edit_psychology_option_' + label).val($(`.editPsychologyQuestionBtn[data-id="${id}"]`).data('option-' + label) || '');
+                    @foreach($packages as $package)
+                        $('#edit_psychology_weight_' + label + '_{{ $package->id }}').val($(`.editPsychologyQuestionBtn[data-id="${id}"]`).data('weight-' + label + '-{{ $package->id }}') ?? 0);
+                    @endforeach
+                });
+
+                const image = $(this).data('image');
+                if (image) {
+                    $('#edit_psychology_image_preview').attr('src', image).removeClass('hidden');
+                } else {
+                    $('#edit_psychology_image_preview').attr('src', '').addClass('hidden');
+                }
+
+                $('#editPsychologyQuestionModal').removeClass('hidden').addClass('flex');
+            });
+
+            function closePsychologyQuestionModal() {
+                $('#editPsychologyQuestionModal').addClass('hidden').removeClass('flex');
+                $('#editPsychologyQuestionForm')[0].reset();
+                $('#edit_psychology_image_preview').attr('src', '').addClass('hidden');
+            }
+
+            $('#closePsychologyQuestionModal').on('click', closePsychologyQuestionModal);
+            $('#editPsychologyQuestionModal').on('click', function (e) {
+                if (e.target.id === 'editPsychologyQuestionModal') {
+                    closePsychologyQuestionModal();
+                }
+            });
+        });
+    </script>
+@endpush

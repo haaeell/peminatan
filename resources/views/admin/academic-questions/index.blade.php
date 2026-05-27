@@ -177,17 +177,32 @@
                     <h2 class="text-xl font-extrabold text-slate-900">Daftar Soal</h2>
                     <p class="text-sm text-slate-500">Preview soal, kunci jawaban, dan pilihan tersedia.</p>
                 </div>
+
+                <form method="GET" class="flex items-center gap-3">
+                    <label class="text-sm font-semibold text-slate-500">Tampilkan</label>
+                    <select name="per_page" onchange="this.form.submit()"
+                        class="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800">
+                        @foreach(['10' => '10', '25' => '25', '50' => '50', 'all' => 'Semua'] as $value => $label)
+                            <option value="{{ $value }}" {{ request('per_page', '10') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </form>
             </div>
 
             <div class="space-y-4">
                 @forelse($questions as $question)
+                    @php
+                        $questionNumber = method_exists($questions, 'firstItem')
+                            ? $questions->firstItem() + $loop->index
+                            : $loop->iteration;
+                    @endphp
                     <div class="border border-slate-200 rounded-[26px] p-5 hover:shadow-lg hover:shadow-blue-100 transition-all duration-300">
 
                         {{-- Question Header --}}
                         <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                             <div class="flex gap-4">
                                 <div class="w-12 h-12 shrink-0 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-extrabold shadow-lg shadow-blue-200">
-                                    {{ $loop->iteration }}
+                                    {{ $questionNumber }}
                                 </div>
 
                                 <div>
@@ -222,21 +237,41 @@
                                 </div>
                             </div>
 
-                            <form id="delete-question-{{ $question->id }}" method="POST"
-                                action="{{ route('admin.academic-questions.destroy', $question) }}">
-                                @csrf
-                                @method('DELETE')
-
+                            <div class="flex items-center gap-2">
                                 <button type="button"
-                                    onclick="confirmDelete('delete-question-{{ $question->id }}')"
-                                    class="group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl
-                                    bg-white text-slate-500 border border-slate-200
+                                    class="editAcademicQuestionBtn group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl
+                                    bg-blue-50 text-blue-700 border border-blue-100
                                     hover:bg-blue-600 hover:text-white hover:border-blue-600
-                                    shadow-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300">
-                                    <i class="fa-solid fa-trash-can group-hover:scale-110 transition-transform"></i>
-                                    <span class="text-sm font-bold">Hapus</span>
+                                    shadow-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300"
+                                    data-id="{{ $question->id }}"
+                                    data-question="{{ e($question->question) }}"
+                                    data-image="{{ $question->image_path ? asset('storage/' . $question->image_path) : '' }}"
+                                    data-active="{{ $question->is_active ? 1 : 0 }}"
+                                    data-option-a="{{ e(optional($question->options->firstWhere('label', 'A'))->option_text) }}"
+                                    data-option-b="{{ e(optional($question->options->firstWhere('label', 'B'))->option_text) }}"
+                                    data-option-c="{{ e(optional($question->options->firstWhere('label', 'C'))->option_text) }}"
+                                    data-option-d="{{ e(optional($question->options->firstWhere('label', 'D'))->option_text) }}"
+                                    data-correct="{{ $question->options->firstWhere('is_correct', true)?->label }}">
+                                    <i class="fa-solid fa-pen-to-square group-hover:scale-110 transition-transform"></i>
+                                    <span class="text-sm font-bold">Edit</span>
                                 </button>
-                            </form>
+
+                                <form id="delete-question-{{ $question->id }}" method="POST"
+                                    action="{{ route('admin.academic-questions.destroy', $question) }}">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="button"
+                                        onclick="confirmDelete('delete-question-{{ $question->id }}')"
+                                        class="group inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl
+                                        bg-white text-slate-500 border border-slate-200
+                                        hover:bg-blue-600 hover:text-white hover:border-blue-600
+                                        shadow-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300">
+                                        <i class="fa-solid fa-trash-can group-hover:scale-110 transition-transform"></i>
+                                        <span class="text-sm font-bold">Hapus</span>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
 
                         {{-- Options --}}
@@ -295,4 +330,108 @@
         </div>
     </div>
 
+    <div id="editAcademicQuestionModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-[28px] p-6 w-full max-w-3xl shadow-2xl">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="font-extrabold text-xl text-slate-900">Edit Soal Akademik</h2>
+                    <p class="text-sm text-slate-500">Perbarui soal, gambar, pilihan, dan kunci jawaban.</p>
+                </div>
+                <button type="button" id="closeAcademicQuestionModal"
+                    class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="editAcademicQuestionForm" method="POST" enctype="multipart/form-data" class="space-y-4">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Pertanyaan</label>
+                    <textarea name="question" id="edit_academic_question" rows="4"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Gambar Soal Baru</label>
+                    <input type="file" name="image" accept="image/*"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700
+                        file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0
+                        file:bg-blue-600 file:text-white file:font-bold">
+                    <img id="edit_academic_image_preview" class="hidden mt-3 w-full max-w-md rounded-2xl border border-slate-200 bg-slate-50 object-contain">
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    @foreach(['A', 'B', 'C', 'D'] as $label)
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Pilihan {{ $label }}</label>
+                            <input name="options[{{ $label }}]" id="edit_academic_option_{{ strtolower($label) }}"
+                                class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800">
+                        </div>
+                    @endforeach
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Kunci Jawaban</label>
+                    <select name="correct_answer" id="edit_academic_correct_answer"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800">
+                        @foreach(['A', 'B', 'C', 'D'] as $label)
+                            <option value="{{ $label }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <label class="flex items-center gap-3 p-4 rounded-2xl bg-blue-50 text-slate-700">
+                    <input type="checkbox" name="is_active" value="1" id="edit_academic_is_active"
+                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    <span class="font-semibold text-sm">Soal aktif dan bisa digunakan</span>
+                </label>
+                <button
+                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
+                    text-white py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition">
+                    <i class="fa-solid fa-save"></i>
+                    Update Soal
+                </button>
+            </form>
+        </div>
+    </div>
+
 @endsection
+
+@push('scripts')
+    <script>
+        $(function () {
+            const updateUrlTemplate = @json(route('admin.academic-questions.update', ['academic_question' => '__ID__']));
+
+            $('.editAcademicQuestionBtn').on('click', function () {
+                const id = $(this).data('id');
+                $('#editAcademicQuestionForm').attr('action', updateUrlTemplate.replace('__ID__', id));
+                $('#edit_academic_question').val($(this).data('question') || '');
+                $('#edit_academic_option_a').val($(this).data('option-a') || '');
+                $('#edit_academic_option_b').val($(this).data('option-b') || '');
+                $('#edit_academic_option_c').val($(this).data('option-c') || '');
+                $('#edit_academic_option_d').val($(this).data('option-d') || '');
+                $('#edit_academic_correct_answer').val($(this).data('correct') || 'A');
+                $('#edit_academic_is_active').prop('checked', Number($(this).data('active')) === 1);
+
+                const image = $(this).data('image');
+                if (image) {
+                    $('#edit_academic_image_preview').attr('src', image).removeClass('hidden');
+                } else {
+                    $('#edit_academic_image_preview').attr('src', '').addClass('hidden');
+                }
+
+                $('#editAcademicQuestionModal').removeClass('hidden').addClass('flex');
+            });
+
+            function closeAcademicQuestionModal() {
+                $('#editAcademicQuestionModal').addClass('hidden').removeClass('flex');
+                $('#editAcademicQuestionForm')[0].reset();
+                $('#edit_academic_image_preview').attr('src', '').addClass('hidden');
+            }
+
+            $('#closeAcademicQuestionModal').on('click', closeAcademicQuestionModal);
+            $('#editAcademicQuestionModal').on('click', function (e) {
+                if (e.target.id === 'editAcademicQuestionModal') {
+                    closeAcademicQuestionModal();
+                }
+            });
+        });
+    </script>
+@endpush

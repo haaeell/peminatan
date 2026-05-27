@@ -17,9 +17,15 @@ class AcademicQuestionController extends Controller
 {
     public function index()
     {
-        $questions = AcademicQuestion::with('options')
-            ->latest()
-            ->paginate(10);
+        $perPage = request('per_page', 10);
+
+        $query = AcademicQuestion::with('options')
+            ->orderBy('order')
+            ->orderByDesc('id');
+
+        $questions = $perPage === 'all'
+            ? $query->get()
+            : $query->paginate((int) $perPage)->withQueryString();
 
         return view('admin.academic-questions.index', compact('questions'));
     }
@@ -58,6 +64,43 @@ class AcademicQuestionController extends Controller
         });
 
         return back()->with('success', 'Soal akademik berhasil dibuat.');
+    }
+
+    public function update(Request $request, AcademicQuestion $academicQuestion, ActivityLogService $logger)
+    {
+        $validated = $request->validate([
+            'question' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'max:2048'],
+            'options' => ['required', 'array'],
+            'options.A' => ['required', 'string'],
+            'options.B' => ['required', 'string'],
+            'options.C' => ['required', 'string'],
+            'options.D' => ['required', 'string'],
+            'correct_answer' => ['required', 'in:A,B,C,D'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        DB::transaction(function () use ($validated, $request, $academicQuestion, $logger) {
+            $academicQuestion->update([
+                'question' => $validated['question'],
+                'image_path' => app(QuestionImageService::class)->storeUploaded($request->file('image'), $academicQuestion->image_path),
+                'is_active' => $request->boolean('is_active'),
+            ]);
+
+            foreach ($validated['options'] as $label => $text) {
+                $academicQuestion->options()->updateOrCreate(
+                    ['label' => $label],
+                    [
+                        'option_text' => $text,
+                        'is_correct' => $label === $validated['correct_answer'],
+                    ]
+                );
+            }
+
+            $logger->log('academic_question', 'update', $academicQuestion);
+        });
+
+        return back()->with('success', 'Soal akademik berhasil diperbarui.');
     }
 
     public function destroy(AcademicQuestion $academicQuestion, ActivityLogService $logger)

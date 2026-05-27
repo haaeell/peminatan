@@ -7,27 +7,27 @@
 
     {{-- Header --}}
         <div class="sticky top-4 z-30 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-[28px] p-4 mb-5 shadow-sm">
-            <div class="flex justify-between items-center gap-4">
+            <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
                 <div>
                     <p class="text-xs font-bold text-blue-600 uppercase tracking-wide">CBT Online</p>
                     <h1 class="font-extrabold text-xl text-slate-900">Tes Psikologi</h1>
                     <p class="text-xs text-slate-500 mt-1">Tidak ada jawaban benar atau salah</p>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <div class="text-right">
+                <div class="grid grid-cols-2 gap-3 w-full lg:w-auto">
+                    <div class="text-left lg:text-right min-w-0">
                         <div class="text-xs font-semibold text-slate-500">Progress</div>
-                        <div class="inline-flex items-center gap-2 mt-1 px-4 py-2 rounded-2xl bg-blue-50 text-blue-700">
+                        <div class="inline-flex w-full lg:w-auto items-center justify-center gap-2 mt-1 px-3 py-2 rounded-2xl bg-blue-50 text-blue-700">
                             <i class="fa-solid fa-chart-line"></i>
-                            <span id="progressText" class="text-2xl font-extrabold">0%</span>
+                            <span id="progressText" class="text-lg sm:text-2xl font-extrabold">0%</span>
                         </div>
                     </div>
 
-                    <div class="text-right">
+                    <div class="text-left lg:text-right min-w-0">
                         <div class="text-xs font-semibold text-slate-500">Sisa Waktu</div>
-                        <div class="inline-flex items-center gap-2 mt-1 px-4 py-2 rounded-2xl bg-blue-50 text-blue-700">
+                        <div class="inline-flex w-full lg:w-auto items-center justify-center gap-2 mt-1 px-3 py-2 rounded-2xl bg-blue-50 text-blue-700">
                             <i class="fa-solid fa-clock"></i>
-                            <span id="timer" class="text-2xl font-extrabold">{{ str_pad((string) $cbtSettings['duration_minutes'], 2, '0', STR_PAD_LEFT) }}:00</span>
+                            <span id="timer" class="text-lg sm:text-2xl font-extrabold">{{ str_pad((string) $cbtSettings['duration_minutes'], 2, '0', STR_PAD_LEFT) }}:00</span>
                         </div>
                     </div>
                 </div>
@@ -172,6 +172,18 @@ function formatTime(totalSeconds) {
     return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
 }
 
+function scrollToQuestionById(questionId) {
+    const target = `#question-${questionId}`;
+
+    if (!$(target).length) {
+        return;
+    }
+
+    $('html, body').animate({
+        scrollTop: $(target).offset().top - 130
+    }, 300);
+}
+
 function updateProgress() {
     const answered = $('.answer-option:checked').length;
     const percent = totalQuestions > 0 ? Math.round((answered / totalQuestions) * 100) : 0;
@@ -211,6 +223,11 @@ const timerInterval = setInterval(() => {
 $('.answer-option').on('change', function () {
     const questionId = $(this).data('question-id');
     const optionId = $(this).val();
+    const options = $('.answer-option');
+    const currentIndex = options.index(this);
+    const nextOption = options.slice(currentIndex + 1).filter(function () {
+        return $(this).data('question-id') !== questionId;
+    }).first();
 
     guard.backupAnswer(questionId, optionId);
 
@@ -238,6 +255,10 @@ $('.answer-option').on('change', function () {
                 .then(() => guard.submitExam());
         }
     });
+
+    if (nextOption.length) {
+        scrollToQuestionById(nextOption.data('question-id'));
+    }
 });
 
 $('.question-nav').on('click', function () {

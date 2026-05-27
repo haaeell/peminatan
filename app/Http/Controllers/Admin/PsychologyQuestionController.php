@@ -18,9 +18,15 @@ class PsychologyQuestionController extends Controller
 {
     public function index()
     {
-        $questions = PsychologyQuestion::with('options.weights.package')
-            ->latest()
-            ->paginate(10);
+        $perPage = request('per_page', 10);
+
+        $query = PsychologyQuestion::with('options.weights.package')
+            ->orderBy('order')
+            ->orderByDesc('id');
+
+        $questions = $perPage === 'all'
+            ? $query->get()
+            : $query->paginate((int) $perPage)->withQueryString();
 
         $packages = Package::where('is_active', true)->get();
 
@@ -74,6 +80,49 @@ class PsychologyQuestionController extends Controller
         });
 
         return back()->with('success', 'Soal psikotes berhasil dibuat.');
+    }
+
+    public function update(Request $request, PsychologyQuestion $psychologyQuestion, ActivityLogService $logger)
+    {
+        $validated = $request->validate([
+            'question' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'max:2048'],
+            'options' => ['required', 'array'],
+            'options.A.text' => ['required', 'string'],
+            'options.B.text' => ['required', 'string'],
+            'options.C.text' => ['required', 'string'],
+            'options.D.text' => ['required', 'string'],
+            'options.*.weights' => ['nullable', 'array'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        DB::transaction(function () use ($validated, $request, $psychologyQuestion, $logger) {
+            $psychologyQuestion->update([
+                'question' => $validated['question'],
+                'image_path' => app(QuestionImageService::class)->storeUploaded($request->file('image'), $psychologyQuestion->image_path),
+                'is_active' => $request->boolean('is_active'),
+            ]);
+
+            foreach ($validated['options'] as $label => $optionData) {
+                $option = $psychologyQuestion->options()->updateOrCreate(
+                    ['label' => $label],
+                    ['option_text' => $optionData['text']]
+                );
+
+                foreach (Package::where('is_active', true)->pluck('id') as $packageId) {
+                    $weight = $optionData['weights'][$packageId] ?? 0;
+
+                    $option->weights()->updateOrCreate(
+                        ['package_id' => $packageId],
+                        ['weight' => (int) $weight]
+                    );
+                }
+            }
+
+            $logger->log('psychology_question', 'update', $psychologyQuestion);
+        });
+
+        return back()->with('success', 'Soal psikotes berhasil diperbarui.');
     }
 
     public function destroy(PsychologyQuestion $psychologyQuestion, ActivityLogService $logger)

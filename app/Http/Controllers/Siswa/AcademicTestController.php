@@ -34,6 +34,13 @@ class AcademicTestController extends Controller
             ->orderBy('order')
             ->get();
 
+        $questions = $this->applyStableRandomOrder(
+            $questions,
+            'academic',
+            $student->id,
+            $sessionState->test_session_id
+        );
+
         $answers = $student->academicAnswers()
             ->pluck('academic_question_option_id', 'academic_question_id')
             ->toArray();
@@ -157,5 +164,24 @@ class AcademicTestController extends Controller
             'message' => 'Tes akademik selesai.',
             'redirect_url' => route('siswa.psychology.index'),
         ]);
+    }
+
+    private function applyStableRandomOrder($questions, string $examType, int $studentId, int $sessionId)
+    {
+        $key = "exam_order.{$examType}.{$studentId}.{$sessionId}";
+        $questionIds = $questions->pluck('id')->all();
+        $storedOrder = session($key, []);
+
+        $validOrder = array_values(array_intersect($storedOrder, $questionIds));
+        $missingIds = array_values(array_diff($questionIds, $validOrder));
+
+        if (!empty($missingIds)) {
+            shuffle($missingIds);
+        }
+
+        $finalOrder = array_merge($validOrder, $missingIds);
+        session([$key => $finalOrder]);
+
+        return $questions->sortBy(fn ($question) => array_search($question->id, $finalOrder, true))->values();
     }
 }

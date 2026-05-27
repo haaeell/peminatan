@@ -8,7 +8,7 @@
         {{-- Header --}}
         <div
             class="sticky top-4 z-30 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-[28px] p-4 mb-5 shadow-sm">
-            <div class="flex justify-between items-center gap-4">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
                     <p class="text-xs font-bold text-blue-600 uppercase tracking-wide">CBT Online</p>
                     <h1 class="font-extrabold text-xl text-slate-900">Tes Akademik</h1>
@@ -153,6 +153,18 @@
             return String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
         }
 
+        function scrollToQuestionById(questionId) {
+            const target = `#question-${questionId}`;
+
+            if (!$(target).length) {
+                return;
+            }
+
+            $('html, body').animate({
+                scrollTop: $(target).offset().top - 120
+            }, 300);
+        }
+
         $('#timer').text(formatTime(remainingSeconds));
 
         const timerInterval = setInterval(() => {
@@ -183,6 +195,11 @@
         $('.answer-option').on('change', function() {
             const questionId = $(this).data('question-id');
             const optionId = $(this).val();
+            const options = $('.answer-option');
+            const currentIndex = options.index(this);
+            const nextOption = options.slice(currentIndex + 1).filter(function () {
+                return $(this).data('question-id') !== questionId;
+            }).first();
 
             guard.backupAnswer(questionId, optionId);
 
@@ -208,6 +225,10 @@
                         .then(() => guard.submitExam());
                 }
             });
+
+            if (nextOption.length) {
+                scrollToQuestionById(nextOption.data('question-id'));
+            }
         });
 
         $('.question-nav').on('click', function() {
