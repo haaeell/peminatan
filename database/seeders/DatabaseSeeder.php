@@ -11,10 +11,44 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::beginTransaction();
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-        try {
+        foreach (
+            [
+                'activity_logs',
+                'violations',
+                'objections',
+                'announcement_responses',
+                'announcements',
+                'class_students',
+                'class_groups',
+                'test_results',
+                'student_psychology_answers',
+                'psychology_option_weights',
+                'psychology_question_options',
+                'psychology_questions',
+                'student_academic_answers',
+                'academic_question_options',
+                'academic_questions',
+                'student_package_choices',
+                'package_subjects',
+                'packages',
+                'student_test_sessions',
+                'test_session_classes',
+                'test_sessions',
+                'student_selfies',
+                'student_biodatas',
+                'students',
+                'settings',
+                'users',
+            ] as $table
+        ) {
+            DB::table($table)->truncate();
+        }
 
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+        DB::transaction(function () {
             /*
             |--------------------------------------------------------------------------
             | SETTINGS
@@ -49,7 +83,7 @@ class DatabaseSeeder extends Seeder
             | ADMIN
             |--------------------------------------------------------------------------
             */
-            $admin = User::create([
+            User::create([
                 'name' => 'Administrator',
                 'email' => 'admin@gmail.com',
                 'password' => Hash::make('password'),
@@ -59,72 +93,92 @@ class DatabaseSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | PACKAGES / JURUSAN
+            | PACKAGES / PAKET JURUSAN
             |--------------------------------------------------------------------------
             */
-            $ipa = DB::table('packages')->insertGetId([
-                'code' => 'IPA',
-                'name' => 'Ilmu Pengetahuan Alam',
-                'description' => 'Jurusan fokus sains dan teknologi',
+            $kelompokA = DB::table('packages')->insertGetId([
+                'code' => 'A',
+                'name' => 'Paket A',
+                'description' => 'Paket peminatan Fisika, Kimia, Matematika Lanjut, dan Geografi',
                 'capacity' => 72,
-                'color' => '#2563eb',
+                'color' => '#9ca3af',
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            $ips = DB::table('packages')->insertGetId([
-                'code' => 'IPS',
-                'name' => 'Ilmu Pengetahuan Sosial',
-                'description' => 'Jurusan fokus sosial dan ekonomi',
+            $kelompokB = DB::table('packages')->insertGetId([
+                'code' => 'B',
+                'name' => 'Paket B',
+                'description' => 'Paket peminatan Kimia, Biologi, Sosiologi, dan Bahasa Inggris Lanjut',
                 'capacity' => 72,
-                'color' => '#dc2626',
+                'color' => '#86efac',
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            $bahasa = DB::table('packages')->insertGetId([
-                'code' => 'BAHASA',
-                'name' => 'Bahasa dan Sastra',
-                'description' => 'Jurusan bahasa dan budaya',
-                'capacity' => 36,
-                'color' => '#16a34a',
+            $kelompokC = DB::table('packages')->insertGetId([
+                'code' => 'C',
+                'name' => 'Paket C',
+                'description' => 'Paket peminatan Sosiologi, Ekonomi, Bahasa Inggris Lanjut, dan Bahasa Jerman',
+                'capacity' => 72,
+                'color' => '#fdba74',
                 'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            $kelompokD = DB::table('packages')->insertGetId([
+                'code' => 'D',
+                'name' => 'Paket D',
+                'description' => 'Paket peminatan Ekonomi, Geografi, Sejarah Lanjut, dan Bahasa Jerman',
+                'capacity' => 72,
+                'color' => '#93c5fd',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $packageIds = [$kelompokA, $kelompokB, $kelompokC, $kelompokD];
 
             /*
-            |--------------------------------------------------------------------------
-            | PACKAGE SUBJECTS
-            |--------------------------------------------------------------------------
-            */
-
+|--------------------------------------------------------------------------
+| PACKAGE SUBJECTS / MATA PELAJARAN PAKET
+|--------------------------------------------------------------------------
+*/
             $subjects = [
-                $ipa => [
-                    'Matematika',
+                $kelompokA => [
                     'Fisika',
                     'Kimia',
-                    'Biologi',
+                    'Matematika Lanjut',
+                    'Geografi',
                 ],
-                $ips => [
+
+                $kelompokB => [
+                    'Kimia',
+                    'Biologi',
+                    'Sosiologi',
+                    'Bahasa Inggris Lanjut',
+                ],
+
+                $kelompokC => [
+                    'Sosiologi',
+                    'Ekonomi',
+                    'Bahasa Inggris Lanjut',
+                    'Bahasa Jerman',
+                ],
+
+                $kelompokD => [
                     'Ekonomi',
                     'Geografi',
-                    'Sosiologi',
-                    'Sejarah',
-                ],
-                $bahasa => [
-                    'Bahasa Indonesia',
-                    'Bahasa Inggris',
-                    'Sastra',
+                    'Sejarah Lanjut',
+                    'Bahasa Jerman',
                 ],
             ];
 
             foreach ($subjects as $packageId => $subjectList) {
-
                 foreach ($subjectList as $index => $subject) {
-
                     DB::table('package_subjects')->insert([
                         'package_id' => $packageId,
                         'subject_name' => $subject,
@@ -140,7 +194,6 @@ class DatabaseSeeder extends Seeder
             | TEST SESSIONS
             |--------------------------------------------------------------------------
             */
-
             $session1 = DB::table('test_sessions')->insertGetId([
                 'name' => 'Sesi 1',
                 'test_date' => now()->toDateString(),
@@ -163,14 +216,9 @@ class DatabaseSeeder extends Seeder
                 'updated_at' => now(),
             ]);
 
-            /*
-            |--------------------------------------------------------------------------
-            | TEST SESSION CLASSES
-            |--------------------------------------------------------------------------
-            */
+            $originClasses = ['X A', 'X B', 'X C', 'X D', 'X E', 'X F', 'X G', 'X H'];
 
-            foreach (['X A', 'X B', 'X C'] as $class) {
-
+            foreach (array_slice($originClasses, 0, 4) as $class) {
                 DB::table('test_session_classes')->insert([
                     'test_session_id' => $session1,
                     'origin_class' => $class,
@@ -179,8 +227,7 @@ class DatabaseSeeder extends Seeder
                 ]);
             }
 
-            foreach (['X D', 'X E', 'X F'] as $class) {
-
+            foreach (array_slice($originClasses, 4) as $class) {
                 DB::table('test_session_classes')->insert([
                     'test_session_id' => $session2,
                     'origin_class' => $class,
@@ -191,13 +238,150 @@ class DatabaseSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | SAMPLE STUDENTS
+            | CLASS GROUPS
             |--------------------------------------------------------------------------
             */
+            $classGroups = [
+                $kelompokA => ['XI A 1', 'XI A 2'],
+                $kelompokB => ['XI B 1', 'XI B 2'],
+                $kelompokC => ['XI C 1', 'XI C 2'],
+                $kelompokD => ['XI D 1', 'XI D 2'],
+            ];
 
-            for ($i = 1; $i <= 30; $i++) {
+            $classGroupIdsByPackage = [];
 
-                $nisn = '202500' . str_pad($i, 4, '0', STR_PAD_LEFT);
+            foreach ($classGroups as $packageId => $groups) {
+                foreach ($groups as $groupName) {
+                    $classGroupIdsByPackage[$packageId][] = DB::table('class_groups')->insertGetId([
+                        'package_id' => $packageId,
+                        'name' => $groupName,
+                        'capacity' => 36,
+                        'is_locked' => false,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | ACADEMIC QUESTIONS
+            |--------------------------------------------------------------------------
+            */
+            $academicQuestionIds = [];
+            $academicOptionsByQuestion = [];
+
+            for ($q = 1; $q <= 40; $q++) {
+                $questionId = DB::table('academic_questions')->insertGetId([
+                    'question' => 'Soal akademik nomor ' . $q,
+                    'order' => $q,
+                    'is_active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $academicQuestionIds[] = $questionId;
+
+                foreach (['A', 'B', 'C', 'D'] as $index => $label) {
+                    $optionId = DB::table('academic_question_options')->insertGetId([
+                        'academic_question_id' => $questionId,
+                        'label' => $label,
+                        'option_text' => 'Pilihan ' . $label,
+                        'is_correct' => $index === 0,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    $academicOptionsByQuestion[$questionId][] = [
+                        'id' => $optionId,
+                        'is_correct' => $index === 0,
+                    ];
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | PSYCHOLOGY QUESTIONS
+            |--------------------------------------------------------------------------
+            */
+            $psychologyQuestionIds = [];
+            $psychologyOptionsByQuestion = [];
+
+            for ($q = 1; $q <= 30; $q++) {
+                $questionId = DB::table('psychology_questions')->insertGetId([
+                    'question' => 'Saya lebih suka aktivitas nomor ' . $q,
+                    'order' => $q,
+                    'is_active' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $psychologyQuestionIds[] = $questionId;
+
+                $options = [
+                    [
+                        'label' => 'A',
+                        'text' => 'Eksperimen, sains, dan analisis data',
+                        'package_id' => $kelompokA,
+                    ],
+                    [
+                        'label' => 'B',
+                        'text' => 'Diskusi sosial, ekonomi, dan organisasi',
+                        'package_id' => $kelompokB,
+                    ],
+                    [
+                        'label' => 'C',
+                        'text' => 'Bahasa, sastra, seni, dan komunikasi',
+                        'package_id' => $kelompokC,
+                    ],
+                    [
+                        'label' => 'D',
+                        'text' => 'Teknologi, informatika, dan desain',
+                        'package_id' => $kelompokD,
+                    ],
+                ];
+
+                foreach ($options as $option) {
+                    $optionId = DB::table('psychology_question_options')->insertGetId([
+                        'psychology_question_id' => $questionId,
+                        'label' => $option['label'],
+                        'option_text' => $option['text'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    $psychologyOptionsByQuestion[$questionId][] = [
+                        'id' => $optionId,
+                        'package_id' => $option['package_id'],
+                    ];
+
+                    foreach ($packageIds as $packageId) {
+                        DB::table('psychology_option_weights')->insert([
+                            'psychology_question_option_id' => $optionId,
+                            'package_id' => $packageId,
+                            'weight' => $packageId === $option['package_id'] ? 10 : rand(1, 4),
+                        ]);
+                    }
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | STUDENTS + ANSWERS + RESULTS
+            |--------------------------------------------------------------------------
+            */
+            $classCounter = [];
+
+            foreach ($packageIds as $packageId) {
+                foreach ($classGroupIdsByPackage[$packageId] as $classGroupId) {
+                    $classCounter[$classGroupId] = 0;
+                }
+            }
+
+            for ($i = 1; $i <= 200; $i++) {
+                $nisn = '2025' . str_pad($i, 6, '0', STR_PAD_LEFT);
+                $originClass = $originClasses[($i - 1) % count($originClasses)];
+                $sessionId = in_array($originClass, ['X A', 'X B', 'X C', 'X D']) ? $session1 : $session2;
 
                 $user = User::create([
                     'name' => 'Siswa ' . $i,
@@ -210,61 +394,178 @@ class DatabaseSeeder extends Seeder
                 $studentId = DB::table('students')->insertGetId([
                     'user_id' => $user->id,
                     'nisn' => $nisn,
-                    'nis' => 'NIS-' . $i,
+                    'nis' => 'NIS-' . str_pad($i, 4, '0', STR_PAD_LEFT),
                     'name' => 'Siswa ' . $i,
-                    'origin_class' => match (true) {
-                        $i <= 5 => 'X A',
-                        $i <= 10 => 'X B',
-                        $i <= 15 => 'X C',
-                        $i <= 20 => 'X D',
-                        $i <= 25 => 'X E',
-                        default => 'X F',
-                    },
-                    'status' => 'onboarding',
+                    'origin_class' => $originClass,
+                    'status' => 'completed',
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
 
                 DB::table('student_biodatas')->insert([
                     'student_id' => $studentId,
-                    'birth_place' => 'Yogyakarta',
-                    'birth_date' => '2009-01-01',
+                    'birth_place' => fake()->city(),
+                    'birth_date' => fake()->dateTimeBetween('2008-01-01', '2010-12-31')->format('Y-m-d'),
                     'gender' => rand(0, 1) ? 'L' : 'P',
                     'address' => 'Alamat siswa ' . $i,
-                    'phone' => '08123456789',
-                    'father_name' => 'Ayah ' . $i,
-                    'mother_name' => 'Ibu ' . $i,
-                    'parent_phone' => '08111111111',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | ACADEMIC QUESTIONS
-            |--------------------------------------------------------------------------
-            */
-
-            for ($q = 1; $q <= 20; $q++) {
-
-                $questionId = DB::table('academic_questions')->insertGetId([
-                    'question' => 'Soal akademik nomor ' . $q,
-                    'order' => $q,
-                    'is_active' => true,
+                    'phone' => '0812' . rand(10000000, 99999999),
+                    'father_name' => 'Ayah Siswa ' . $i,
+                    'mother_name' => 'Ibu Siswa ' . $i,
+                    'parent_phone' => '0813' . rand(10000000, 99999999),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
 
-                $options = ['A', 'B', 'C', 'D'];
+                DB::table('student_selfies')->insert([
+                    'student_id' => $studentId,
+                    'path' => 'selfies/default-avatar.png',
+                    'device_info' => json_encode([
+                        'browser' => 'Seeder',
+                        'platform' => 'Laravel',
+                    ]),
+                    'captured_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
-                foreach ($options as $index => $label) {
+                $firstPackageId = $packageIds[array_rand($packageIds)];
+                $secondPackageOptions = array_values(array_diff($packageIds, [$firstPackageId]));
+                $secondPackageId = $secondPackageOptions[array_rand($secondPackageOptions)];
 
-                    DB::table('academic_question_options')->insert([
+                DB::table('student_package_choices')->insert([
+                    'student_id' => $studentId,
+                    'first_package_id' => $firstPackageId,
+                    'second_package_id' => $secondPackageId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                DB::table('student_test_sessions')->insert([
+                    'student_id' => $studentId,
+                    'test_session_id' => $sessionId,
+                    'started_at' => now()->subMinutes(rand(80, 120)),
+                    'finished_at' => now()->subMinutes(rand(1, 30)),
+                    'status' => 'finished',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Academic Answers
+                |--------------------------------------------------------------------------
+                */
+                $correctCount = 0;
+
+                foreach ($academicQuestionIds as $questionId) {
+                    $options = $academicOptionsByQuestion[$questionId];
+
+                    $isCorrectAnswer = rand(1, 100) <= rand(45, 95);
+
+                    if ($isCorrectAnswer) {
+                        $selectedOption = collect($options)->firstWhere('is_correct', true);
+                    } else {
+                        $selectedOption = collect($options)->where('is_correct', false)->random();
+                    }
+
+                    if ($selectedOption['is_correct']) {
+                        $correctCount++;
+                    }
+
+                    DB::table('student_academic_answers')->insert([
+                        'student_id' => $studentId,
                         'academic_question_id' => $questionId,
-                        'label' => $label,
-                        'option_text' => 'Pilihan ' . $label,
-                        'is_correct' => $index === 0,
+                        'academic_question_option_id' => $selectedOption['id'],
+                        'is_correct' => $selectedOption['is_correct'],
+                        'answered_at' => now(),
+                    ]);
+                }
+
+                $academicScore = round(($correctCount / count($academicQuestionIds)) * 100, 2);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Psychology Answers
+                |--------------------------------------------------------------------------
+                */
+                $psychologyScores = [
+                    $kelompokA => 0,
+                    $kelompokB => 0,
+                    $kelompokC => 0,
+                    $kelompokD => 0,
+                ];
+
+                $dominantPackage = match (true) {
+                    $i % 4 === 1 => $kelompokA,
+                    $i % 4 === 2 => $kelompokB,
+                    $i % 4 === 3 => $kelompokC,
+                    default => $kelompokD,
+                };
+
+                foreach ($psychologyQuestionIds as $questionId) {
+                    $options = $psychologyOptionsByQuestion[$questionId];
+
+                    if (rand(1, 100) <= 70) {
+                        $selectedOption = collect($options)->firstWhere('package_id', $dominantPackage);
+                    } else {
+                        $selectedOption = collect($options)->random();
+                    }
+
+                    DB::table('student_psychology_answers')->insert([
+                        'student_id' => $studentId,
+                        'psychology_question_id' => $questionId,
+                        'psychology_question_option_id' => $selectedOption['id'],
+                        'answered_at' => now(),
+                    ]);
+
+                    foreach ($packageIds as $packageId) {
+                        $psychologyScores[$packageId] += $packageId === $selectedOption['package_id']
+                            ? 10
+                            : rand(1, 4);
+                    }
+                }
+
+                arsort($psychologyScores);
+
+                $recommendedPackageId = array_key_first($psychologyScores);
+
+                $finalPackageId = rand(1, 100) <= 75
+                    ? $recommendedPackageId
+                    : $firstPackageId;
+
+                DB::table('test_results')->insert([
+                    'student_id' => $studentId,
+                    'academic_score' => $academicScore,
+                    'psychology_scores' => json_encode($psychologyScores),
+                    'recommended_package_id' => $recommendedPackageId,
+                    'final_package_id' => $finalPackageId,
+                    'is_locked' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Class Distribution
+                |--------------------------------------------------------------------------
+                */
+                $selectedClassGroupId = null;
+
+                foreach ($classGroupIdsByPackage[$finalPackageId] as $classGroupId) {
+                    if ($classCounter[$classGroupId] < 36) {
+                        $selectedClassGroupId = $classGroupId;
+                        break;
+                    }
+                }
+
+                if ($selectedClassGroupId) {
+                    $classCounter[$selectedClassGroupId]++;
+
+                    DB::table('class_students')->insert([
+                        'class_group_id' => $selectedClassGroupId,
+                        'student_id' => $studentId,
+                        'package_id' => $finalPackageId,
+                        'is_manual_override' => rand(1, 100) <= 15,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -273,118 +574,45 @@ class DatabaseSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | PSYCHOLOGY QUESTIONS
+            | ANNOUNCEMENT SAMPLE
             |--------------------------------------------------------------------------
             */
-
-            for ($q = 1; $q <= 20; $q++) {
-
-                $questionId = DB::table('psychology_questions')->insertGetId([
-                    'question' => 'Saya lebih suka aktivitas nomor ' . $q,
-                    'order' => $q,
-                    'is_active' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                $optionA = DB::table('psychology_question_options')->insertGetId([
-                    'psychology_question_id' => $questionId,
-                    'label' => 'A',
-                    'option_text' => 'Eksperimen dan sains',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                $optionB = DB::table('psychology_question_options')->insertGetId([
-                    'psychology_question_id' => $questionId,
-                    'label' => 'B',
-                    'option_text' => 'Sosial dan organisasi',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                $optionC = DB::table('psychology_question_options')->insertGetId([
-                    'psychology_question_id' => $questionId,
-                    'label' => 'C',
-                    'option_text' => 'Bahasa dan seni',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                /*
-                |--------------------------------------------------------------------------
-                | WEIGHTS
-                |--------------------------------------------------------------------------
-                */
-
-                DB::table('psychology_option_weights')->insert([
-                    [
-                        'psychology_question_option_id' => $optionA,
-                        'package_id' => $ipa,
-                        'weight' => 10,
-                    ],
-                    [
-                        'psychology_question_option_id' => $optionA,
-                        'package_id' => $ips,
-                        'weight' => 3,
-                    ],
-                    [
-                        'psychology_question_option_id' => $optionB,
-                        'package_id' => $ips,
-                        'weight' => 10,
-                    ],
-                    [
-                        'psychology_question_option_id' => $optionB,
-                        'package_id' => $ipa,
-                        'weight' => 2,
-                    ],
-                    [
-                        'psychology_question_option_id' => $optionC,
-                        'package_id' => $bahasa,
-                        'weight' => 10,
-                    ],
-                ]);
-            }
+            $announcementId = DB::table('announcements')->insertGetId([
+                'type' => 'temporary',
+                'title' => 'Pengumuman Hasil Sementara',
+                'content' => 'Berikut adalah hasil sementara pemilihan jurusan.',
+                'is_published' => true,
+                'published_at' => now(),
+                'published_by' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
             /*
             |--------------------------------------------------------------------------
-            | CLASS GROUPS
+            | OBJECTIONS SAMPLE
             |--------------------------------------------------------------------------
             */
+            for ($i = 1; $i <= 12; $i++) {
+                DB::table('announcement_responses')->insert([
+                    'announcement_id' => $announcementId,
+                    'student_id' => $i,
+                    'response' => 'objected',
+                    'responded_at' => now(),
+                ]);
 
-            DB::table('class_groups')->insert([
-                [
-                    'package_id' => $ipa,
-                    'name' => 'XI IPA 1',
-                    'capacity' => 30,
-                    'is_locked' => false,
+                DB::table('objections')->insert([
+                    'student_id' => $i,
+                    'announcement_id' => $announcementId,
+                    'reason' => 'Saya ingin mengajukan keberatan terhadap hasil jurusan karena ingin menyesuaikan dengan minat saya.',
+                    'status' => $i <= 6 ? 'pending' : ($i <= 9 ? 'approved' : 'rejected'),
+                    'admin_note' => $i <= 6 ? null : 'Sudah ditinjau oleh admin.',
+                    'reviewed_by' => $i <= 6 ? null : 1,
+                    'reviewed_at' => $i <= 6 ? null : now(),
                     'created_at' => now(),
                     'updated_at' => now(),
-                ],
-                [
-                    'package_id' => $ipa,
-                    'name' => 'XI IPA 2',
-                    'capacity' => 30,
-                    'is_locked' => false,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'package_id' => $ips,
-                    'name' => 'XI IPS 1',
-                    'capacity' => 30,
-                    'is_locked' => false,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-            ]);
-
-            DB::commit();
-        } catch (\Throwable $e) {
-
-            DB::rollBack();
-
-            throw $e;
-        }
+                ]);
+            }
+        });
     }
 }

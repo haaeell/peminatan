@@ -1,180 +1,85 @@
 @extends('layouts.admin')
 
-@section('title', 'Jurusan')
+@section('title', 'Paket Jurusan')@section('content')
 
-@section('content')
-
-    {{-- Header --}}
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <div>
             <h1 class="text-3xl font-extrabold text-slate-900">
-                Jurusan
+                Paket Jurusan
             </h1>
 
             <p class="text-slate-500 mt-2">
-                Kelola data jurusan, kapasitas, dan mata pelajaran.
+                Kelola kelompok jurusan dan mata pelajaran paket.
             </p>
         </div>
 
-        <div class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-2xl font-bold">
-            <i class="fa-solid fa-layer-group"></i>
-            Total: {{ $packages->count() }} jurusan
-        </div>
+        <button type="button" onclick="openCreateModal()"
+            class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition">
+            <i class="fa-solid fa-plus"></i>
+            Tambah Paket
+        </button>
     </div>
 
-    {{-- Form --}}
-    <div class="bg-white border border-slate-200 rounded-[30px] p-6 shadow-sm mb-8">
-        <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                <i class="fa-solid fa-plus"></i>
-            </div>
-
-            <div>
-                <h2 class="text-xl font-extrabold text-slate-900">
-                    Tambah Jurusan
-                </h2>
-
-                <p class="text-sm text-slate-500">
-                    Tambahkan jurusan baru ke sistem.
-                </p>
-            </div>
-        </div>
-
-        @if ($errors->any())
-            <div class="mb-5 rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
-                <p class="font-bold mb-2">Periksa kembali input:</p>
-
-                <ul class="list-disc list-inside space-y-1">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <form method="POST" action="{{ route('admin.packages.store') }}" class="grid grid-cols-1 md:grid-cols-6 gap-4">
-            @csrf
-
-            {{-- Kode --}}
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">
-                    Kode
-                </label>
-
-                <input name="code" value="{{ old('code') }}" placeholder="IPA"
-                    class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800
-                                focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
-            </div>
-
-            {{-- Nama --}}
-            <div class="md:col-span-2">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">
-                    Nama Jurusan
-                </label>
-
-                <input name="name" value="{{ old('name') }}" placeholder="Ilmu Pengetahuan Alam"
-                    class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800
-                                focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
-            </div>
-
-            {{-- Kapasitas --}}
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">
-                    Kapasitas
-                </label>
-
-                <input name="capacity" type="number" value="{{ old('capacity') }}" placeholder="40"
-                    class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800
-                                focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
-            </div>
-
-            {{-- Color --}}
-            <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-2">
-                    Warna
-                </label>
-
-                <input name="color" type="color" value="{{ old('color', '#2563eb') }}"
-                    class="w-full h-[52px] rounded-2xl border border-slate-200 bg-white cursor-pointer">
-            </div>
-
-            {{-- Submit --}}
-            <div class="flex items-end">
-                <button
-                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
-                                text-white py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all duration-300">
-                    <i class="fa-solid fa-save"></i>
-                    Tambah
-                </button>
-            </div>
-        </form>
-    </div>
-
-    {{-- Table --}}
-    <div class="bg-white border border-slate-200 rounded-[30px] p-6 shadow-sm">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-            <div>
-                <h2 class="text-xl font-extrabold text-slate-900">
-                    Daftar Jurusan
-                </h2>
-
-                <p class="text-sm text-slate-500">
-                    Data jurusan dan mata pelajaran terkait.
-                </p>
-            </div>
-        </div>
-
+    {{-- TABLE --}}
+    <div class="bg-white border border-slate-200 rounded-[30px] shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="datatable w-full text-sm">
-                <thead>
-                    <tr class="text-slate-600">
-                        <th>Kode</th>
-                        <th>Nama</th>
-                        <th>Mapel</th>
-                        <th class="text-center">Aksi</th>
+            <table class="w-full text-sm">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                            Paket
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                            Mata Pelajaran
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                            Kapasitas
+                        </th>
+
+                        <th class="px-6 py-4 text-left text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                            Status
+                        </th>
+
+                        <th class="px-6 py-4 text-center text-xs font-extrabold uppercase tracking-wide text-slate-500">
+                            Aksi
+                        </th>
                     </tr>
                 </thead>
 
-                <tbody>
-                    @foreach($packages as $package)
-                        <tr class="align-top">
-
-                            {{-- Kode --}}
-                            <td>
-                                <div class="flex items-center gap-3">
-                                    <div class="w-11 h-11 rounded-2xl shadow-sm"
-                                        style="background: {{ $package->color ?? '#2563eb' }}">
+                <tbody class="divide-y divide-slate-100">
+                    @forelse($packages as $package)
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="px-6 py-5">
+                                <div class="flex items-start gap-4">
+                                    <div class="w-12 h-12 rounded-2xl border border-slate-200 shadow-sm"
+                                        style="background: {{ $package->color }}">
                                     </div>
 
                                     <div>
                                         <div class="font-extrabold text-slate-900">
-                                            {{ $package->code }}
+                                            {{ $package->name }}
                                         </div>
 
-                                        <div class="text-xs text-slate-400">
-                                            ID: #{{ $package->id }}
+                                        <div class="text-xs text-slate-500 mt-1">
+                                            Kode: {{ $package->code }}
                                         </div>
+
+                                        @if ($package->description)
+                                            <div class="text-xs text-slate-400 mt-1 max-w-md">
+                                                {{ $package->description }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </td>
 
-                            {{-- Nama --}}
-                            <td>
-                                <div class="font-bold text-slate-800">
-                                    {{ $package->name }}
-                                </div>
-                            </td>
-
-
-                            {{-- Subjects --}}
-                            <td>
-                                <div class="flex flex-wrap gap-2 max-w-sm">
+                            <td class="px-6 py-5">
+                                <div class="flex flex-wrap gap-2 max-w-lg">
                                     @forelse($package->subjects as $subject)
                                         <span
-                                            class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-xl text-xs font-bold border border-blue-100">
-
-                                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-
+                                            class="inline-flex items-center px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold">
                                             {{ $subject->subject_name }}
                                         </span>
                                     @empty
@@ -185,200 +90,392 @@
                                 </div>
                             </td>
 
-                            {{-- Action --}}
-                            <td>
+                            <td class="px-6 py-5">
+                                <div
+                                    class="inline-flex items-center px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">
+                                    {{ $package->capacity }} siswa
+                                </div>
+                            </td>
+
+                            <td class="px-6 py-5">
+                                @if ($package->is_active)
+                                    <span
+                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-50 text-green-700 text-xs font-extrabold">
+                                        <i class="fa-solid fa-check"></i>
+                                        Aktif
+                                    </span>
+                                @else
+                                    <span
+                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-red-50 text-red-700 text-xs font-extrabold">
+                                        <i class="fa-solid fa-xmark"></i>
+                                        Nonaktif
+                                    </span>
+                                @endif
+                            </td>
+
+                            <td class="px-6 py-5">
                                 <div class="flex items-center justify-center gap-2">
 
-                                    {{-- Edit --}}
-                                    <button type="button" class="editBtn group w-10 h-10 inline-flex items-center justify-center rounded-2xl
-                                bg-blue-50 text-blue-700 border border-blue-100
-                                hover:bg-blue-600 hover:text-white hover:border-blue-600
-                                shadow-sm hover:shadow-lg hover:shadow-blue-200
-                                transition-all duration-300" data-id="{{ $package->id }}" data-code="{{ e($package->code) }}"
-                                        data-name="{{ e($package->name) }}" data-capacity="{{ $package->capacity }}"
-                                        data-color="{{ $package->color }}" data-is_active="{{ $package->is_active ? 1 : 0 }}"
-                                        title="Edit jurusan">
+                                    <button type="button"
+                                        class="editBtn group w-11 h-11 inline-flex items-center justify-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 shadow-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300"
+                                        data-id="{{ $package->id }}" data-code="{{ e($package->code) }}"
+                                        data-name="{{ e($package->name) }}" data-description="{{ e($package->description) }}"
+                                        data-capacity="{{ $package->capacity }}" data-color="{{ $package->color }}"
+                                        data-is_active="{{ $package->is_active ? 1 : 0 }}"
+                                        data-subjects='@json($package->subjects->sortBy('order')->pluck('subject_name')->values())'>
 
                                         <i
                                             class="fa-solid fa-pen-to-square text-sm group-hover:scale-110 transition-transform"></i>
                                     </button>
 
-                                    {{-- Delete --}}
-                                    <form id="delete-package-{{ $package->id }}" method="POST"
-                                        action="{{ route('admin.packages.destroy', $package) }}">
+                                    <form method="POST" action="{{ route('admin.packages.destroy', $package) }}"
+                                        onsubmit="return confirm('Hapus paket ini?')">
                                         @csrf
                                         @method('DELETE')
 
-                                        <button type="button" onclick="confirmDelete('delete-package-{{ $package->id }}')"
-                                            class="group w-10 h-10 inline-flex items-center justify-center rounded-2xl
-                                                                                bg-white text-slate-500 border border-slate-200
-                                                                                hover:bg-blue-600 hover:text-white hover:border-blue-600
-                                                                                shadow-sm hover:shadow-lg hover:shadow-blue-200
-                                                                                transition-all duration-300"
-                                            title="Hapus jurusan">
+                                        <button
+                                            class="group w-11 h-11 inline-flex items-center justify-center rounded-2xl bg-red-50 text-red-700 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-sm hover:shadow-lg hover:shadow-red-200 transition-all duration-300">
 
-                                            <i
-                                                class="fa-solid fa-trash-can text-sm group-hover:scale-110 transition-transform"></i>
+                                            <i class="fa-solid fa-trash text-sm group-hover:scale-110 transition-transform"></i>
                                         </button>
                                     </form>
 
                                 </div>
                             </td>
-
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-6 py-20 text-center">
+                                <div
+                                    class="mx-auto w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mb-5">
+                                    <i class="fa-solid fa-layer-group text-2xl"></i>
+                                </div>
+
+                                <h3 class="text-xl font-extrabold text-slate-900">
+                                    Belum ada paket jurusan
+                                </h3>
+
+                                <p class="text-slate-500 mt-2">
+                                    Tambahkan paket untuk mulai distribusi kelas.
+                                </p>
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
+
+        <div class="p-6 border-t border-slate-100">
+            {{ $packages->links() }}
+        </div>
     </div>
-    {{-- Edit Modal --}}
-    <div id="editModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 items-center justify-center p-4">
 
-        <div id="editModalPanel" class="bg-white border border-slate-200 rounded-[30px] p-6 w-full max-w-2xl shadow-2xl">
+    {{-- CREATE MODAL --}}
+    <div id="createModal" class="hidden fixed inset-0 bg-black/40 z-50 items-center justify-center p-4">
 
-            {{-- Header --}}
-            <div class="flex items-start justify-between mb-6">
+        <div class="bg-white rounded-[32px] w-full max-w-4xl shadow-2xl overflow-hidden">
 
+            <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200">
                 <div>
                     <h2 class="text-2xl font-extrabold text-slate-900">
-                        Edit Jurusan
+                        Tambah Paket
                     </h2>
 
                     <p class="text-sm text-slate-500 mt-1">
-                        Perbarui data jurusan dan kapasitas.
+                        Tambahkan kelompok jurusan beserta mata pelajaran.
                     </p>
                 </div>
 
-                <button type="button" id="closeModal"
-                    class="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition">
+                <button type="button" onclick="closeCreateModal()"
+                    class="w-11 h-11 rounded-2xl hover:bg-slate-100 text-slate-500 transition">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
-            {{-- Form --}}
-            <form id="editForm" method="POST" class="space-y-5">
+            <form method="POST" action="{{ route('admin.packages.store') }}" class="p-6 space-y-6">
+
                 @csrf
-                @method('PUT')
 
-                <div class="grid md:grid-cols-2 gap-5">
-
-                    {{-- Code --}}
+                <div class="grid md:grid-cols-5 gap-4">
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
                             Kode
                         </label>
 
-                        <input name="code" id="edit_code"
-                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200
-                                    focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+                        <input name="code" placeholder="A"
+                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
                     </div>
 
-                    {{-- Capacity --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                            Nama Paket
+                        </label>
+
+                        <input name="name" placeholder="Kelompok A"
+                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+                    </div>
+
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
                             Kapasitas
                         </label>
 
-                        <input name="capacity" id="edit_capacity" type="number"
-                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200
-                                    focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+                        <input name="capacity" type="number" value="72"
+                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                            Warna
+                        </label>
+
+                        <input name="color" type="color" value="#2563eb"
+                            class="w-full h-[52px] rounded-2xl border border-slate-200 cursor-pointer">
+                    </div>
                 </div>
 
-                {{-- Name --}}
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">
-                        Nama Jurusan
+                    <label class="block text-sm font-bold text-slate-700 mb-2">
+                        Deskripsi
                     </label>
 
-                    <input name="name" id="edit_name"
-                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200
-                                focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+                    <textarea name="description" rows="3"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition"></textarea>
                 </div>
 
-                {{-- Color --}}
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">
-                        Warna
-                    </label>
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="text-sm font-bold text-slate-700">
+                            Mata Pelajaran
+                        </label>
 
-                    <input name="color" id="edit_color" type="color"
-                        class="w-full h-[52px] rounded-2xl border border-slate-200 bg-white cursor-pointer">
+                        <button type="button" onclick="addSubjectField('subjectWrapper')"
+                            class="text-sm font-bold text-blue-600 hover:text-blue-700">
+                            + Tambah Mapel
+                        </button>
+                    </div>
+
+                    <div id="subjectWrapper" class="grid md:grid-cols-2 gap-3">
+
+                        <div class="relative">
+                            <input name="subjects[]" placeholder="Contoh: Fisika"
+                                class="w-full pr-12 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200">
+
+                            <button type="button" onclick="removeSubjectField(this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div class="relative">
+                            <input name="subjects[]" placeholder="Contoh: Kimia"
+                                class="w-full pr-12 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200">
+
+                            <button type="button" onclick="removeSubjectField(this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                    </div>
                 </div>
 
-                {{-- Status --}}
-                <label class="flex items-center gap-3 p-4 rounded-2xl bg-blue-50 text-slate-700">
-                    <input type="checkbox" name="is_active" value="1" id="edit_is_active"
+                <label class="flex items-center gap-3 text-sm font-bold text-slate-700">
+                    <input type="checkbox" name="is_active" value="1" checked
                         class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
 
-                    <span class="font-semibold text-sm">
-                        Jurusan aktif
-                    </span>
+                    Paket aktif
                 </label>
 
-                {{-- Submit --}}
-                <button class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
-                            text-white py-3 rounded-2xl font-bold shadow-lg shadow-blue-200 transition-all duration-300">
-
+                <button
+                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-200 transition">
                     <i class="fa-solid fa-save"></i>
-                    Update Jurusan
+                    Simpan Paket
                 </button>
 
             </form>
         </div>
     </div>
 
-    @push('scripts')
-        <script>
-            $(function () {
+    {{-- EDIT MODAL --}}
+    <div id="editModal" class="hidden fixed inset-0 bg-black/40 z-50 items-center justify-center p-4">
 
-                const updateUrlTemplate =
-                    "{{ route('admin.packages.update', ':id') }}";
+        <div class="bg-white rounded-[32px] w-full max-w-4xl shadow-2xl overflow-hidden">
 
-                $('.editBtn').on('click', function () {
+            <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200">
+                <div>
+                    <h2 class="text-2xl font-extrabold text-slate-900">
+                        Edit Paket
+                    </h2>
 
-                    const id = $(this).data('id');
-                    const updateUrl = updateUrlTemplate.replace(':id', id);
+                    <p class="text-sm text-slate-500 mt-1">
+                        Perbarui data paket dan mata pelajaran.
+                    </p>
+                </div>
 
-                    $('#editForm').attr('action', updateUrl);
+                <button type="button" onclick="closeEditModal()"
+                    class="w-11 h-11 rounded-2xl hover:bg-slate-100 text-slate-500 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
 
-                    $('#edit_code').val($(this).data('code'));
-                    $('#edit_name').val($(this).data('name'));
-                    $('#edit_capacity').val($(this).data('capacity'));
-                    $('#edit_color').val($(this).data('color'));
+            <form id="editForm" method="POST" class="p-6 space-y-6">
 
-                    $('#edit_is_active').prop(
-                        'checked',
-                        Number($(this).data('is_active')) === 1
-                    );
+                @csrf
+                @method('PUT')
 
-                    $('#editModal')
-                        .removeClass('hidden')
-                        .addClass('flex');
-                });
+                <div class="grid md:grid-cols-5 gap-4">
+                    <input id="edit_code" name="code" class="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200">
 
-                function closeEditModal() {
-                    $('#editModal')
-                        .addClass('hidden')
-                        .removeClass('flex');
-                }
+                    <input id="edit_name" name="name"
+                        class="md:col-span-2 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200">
 
-                $('#closeModal').on('click', closeEditModal);
+                    <input id="edit_capacity" name="capacity" type="number"
+                        class="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200">
 
-                $('#editModal').on('click', function (e) {
-                    if (e.target.id === 'editModal') {
-                        closeEditModal();
-                    }
-                });
+                    <input id="edit_color" name="color" type="color" class="h-[52px] rounded-2xl border border-slate-200">
+                </div>
 
-                $(document).on('keydown', function (e) {
-                    if (e.key === 'Escape') {
-                        closeEditModal();
-                    }
-                });
+                <textarea id="edit_description" name="description" rows="3"
+                    class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200"></textarea>
 
-            });
-        </script>
-    @endpush
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="text-sm font-bold text-slate-700">
+                            Mata Pelajaran
+                        </label>
+
+                        <button type="button" onclick="addSubjectField('editSubjectWrapper')"
+                            class="text-sm font-bold text-blue-600 hover:text-blue-700">
+                            + Tambah Mapel
+                        </button>
+                    </div>
+
+                    <div id="editSubjectWrapper" class="grid md:grid-cols-2 gap-3"></div>
+                </div>
+
+                <label class="flex items-center gap-3 text-sm font-bold text-slate-700">
+                    <input id="edit_is_active" type="checkbox" name="is_active" value="1">
+
+                    Paket aktif
+                </label>
+
+                <button
+                    class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-200 transition">
+                    <i class="fa-solid fa-save"></i>
+                    Update Paket
+                </button>
+
+            </form>
+        </div>
+    </div>
+
 @endsection
+
+@push('scripts')
+    <script>
+        function openCreateModal() {
+            document.getElementById('createModal').classList.remove('hidden');
+            document.getElementById('createModal').classList.add('flex');
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.add('hidden');
+            document.getElementById('createModal').classList.remove('flex');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('flex');
+        }
+
+        function escapeAttr(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;');
+        }
+
+        function addSubjectField(wrapperId) {
+
+            document.getElementById(wrapperId)
+                .insertAdjacentHTML(
+                    'beforeend',
+
+                    `
+                <div class="relative">
+
+                    <input name="subjects[]"
+                        placeholder="Nama mata pelajaran"
+                        class="w-full pr-12 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200
+                        focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+
+                    <button type="button"
+                        onclick="removeSubjectField(this)"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                </div>
+                `
+                );
+        }
+
+        function removeSubjectField(button) {
+
+            const wrapper = button.closest('.relative');
+
+            wrapper.remove();
+        }
+
+        $('.editBtn').on('click', function () {
+
+            const id = $(this).data('id');
+            const code = $(this).data('code');
+            const name = $(this).data('name');
+            const description = $(this).data('description');
+            const capacity = $(this).data('capacity');
+            const color = $(this).data('color');
+            const isActive = $(this).data('is_active');
+            const subjects = $(this).data('subjects') || [];
+
+            const url = "{{ route('admin.packages.update', ':id') }}"
+                .replace(':id', id);
+
+            $('#editForm').attr('action', url);
+
+            $('#edit_code').val(code);
+            $('#edit_name').val(name);
+            $('#edit_description').val(description);
+            $('#edit_capacity').val(capacity);
+            $('#edit_color').val(color);
+            $('#edit_is_active').prop('checked', isActive == 1);
+
+            $('#editSubjectWrapper').html('');
+
+            subjects.forEach(function (subject) {
+                $('#editSubjectWrapper').append(`
+        <div class="relative">
+
+            <input name="subjects[]"
+                value="${escapeAttr(subject)}"
+                class="w-full pr-12 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200
+                focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+
+            <button type="button"
+                onclick="removeSubjectField(this)"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+        </div>
+    `);
+            });
+
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        });
+    </script>
+@endpush

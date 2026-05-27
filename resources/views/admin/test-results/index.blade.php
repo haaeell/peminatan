@@ -110,7 +110,6 @@
                     info: 'Menampilkan _START_ - _END_ dari _TOTAL_ data',
                     infoEmpty: 'Tidak ada data',
                     zeroRecords: 'Data tidak ditemukan',
-                    processing: 'Memuat data...',
                     paginate: {
                         previous: '<',
                         next: '>'
@@ -135,10 +134,10 @@
                 const selected = String(packageItem.id) === String(selectedId) ? 'selected' : '';
 
                 return `
-                                                <option value="${packageItem.id}" ${selected}>
-                                                    ${escapeHtml(packageItem.name)}
-                                                </option>
-                                            `;
+                                                    <option value="${packageItem.id}" ${selected}>
+                                                        ${escapeHtml(packageItem.name)}
+                                                    </option>
+                                                `;
             }).join('');
         }
 
@@ -147,10 +146,10 @@
                 const selected = String(group.id) === String(selectedId) ? 'selected' : '';
 
                 return `
-                                                <option value="${group.id}" ${selected}>
-                                                    ${escapeHtml(group.name)} - ${escapeHtml(group.package_code)}
-                                                </option>
-                                            `;
+                                                    <option value="${group.id}" ${selected}>
+                                                        ${escapeHtml(group.name)} - ${escapeHtml(group.package_code)}
+                                                    </option>
+                                                `;
             }).join('');
         }
 
@@ -160,146 +159,146 @@
             }
 
             return Object.entries(scores).map(([code, score]) => `
-                                            <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold">
-                                                ${escapeHtml(code)}: ${escapeHtml(score)}
-                                            </span>
-                                        `).join('');
+                                                <span class="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 text-xs font-bold">
+                                                    ${escapeHtml(code)}: ${escapeHtml(score)}
+                                                </span>
+                                            `).join('');
         }
 
         function openDetailModal(data) {
             document.getElementById('detailContent').innerHTML = `
-                                            <div class="grid lg:grid-cols-3 gap-5">
-                                                <div>
-                                                    ${data.selfie
-                    ? `
-                                                            <a href="${data.selfie}" target="_blank">
-                                                                <img src="${data.selfie}"
-                                                                    class="w-full max-h-[360px] object-cover rounded-3xl border border-slate-200 shadow-sm">
-                                                            </a>
-                                                            <div class="text-xs text-slate-500 mt-2">
-                                                                Selfie: ${escapeHtml(data.selfie_date)}
-                                                            </div>
-                                                        `
-                    : `
-                                                            <div class="aspect-square rounded-3xl bg-slate-100 flex items-center justify-center text-slate-400">
-                                                                <i class="fa-solid fa-user text-5xl"></i>
-                                                            </div>
-                                                        `
-                }
-                                                </div>
-
-                                                <div class="lg:col-span-2 space-y-5">
+                                                <div class="grid lg:grid-cols-3 gap-5">
                                                     <div>
-                                                        <h3 class="text-2xl font-extrabold text-slate-900">
-                                                            ${escapeHtml(data.name)}
-                                                        </h3>
-
-                                                        <div class="flex flex-wrap gap-2 mt-2">
-                                                            <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">
-                                                                ${escapeHtml(data.status)}
-                                                            </span>
-
-                                                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
-                                                                ${escapeHtml(data.origin_class)}
-                                                            </span>
-
-                                                            <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
-                                                                NISN ${escapeHtml(data.nisn)}
-                                                            </span>
-                                                        </div>
+                                                        ${data.selfie
+                    ? `
+                                                                <a href="${data.selfie}" target="_blank">
+                                                                    <img src="${data.selfie}"
+                                                                        class="w-full max-h-[360px] object-cover rounded-3xl border border-slate-200 shadow-sm">
+                                                                </a>
+                                                                <div class="text-xs text-slate-500 mt-2">
+                                                                    Selfie: ${escapeHtml(data.selfie_date)}
+                                                                </div>
+                                                            `
+                    : `
+                                                                <div class="aspect-square rounded-3xl bg-slate-100 flex items-center justify-center text-slate-400">
+                                                                    <i class="fa-solid fa-user text-5xl"></i>
+                                                                </div>
+                                                            `
+                }
                                                     </div>
 
-                                                    <div class="grid md:grid-cols-2 gap-3">
+                                                    <div class="lg:col-span-2 space-y-5">
+                                                        <div>
+                                                            <h3 class="text-2xl font-extrabold text-slate-900">
+                                                                ${escapeHtml(data.name)}
+                                                            </h3>
+
+                                                            <div class="flex flex-wrap gap-2 mt-2">
+                                                                <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">
+                                                                    ${escapeHtml(data.status)}
+                                                                </span>
+
+                                                                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
+                                                                    ${escapeHtml(data.origin_class)}
+                                                                </span>
+
+                                                                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">
+                                                                    NISN ${escapeHtml(data.nisn)}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="grid md:grid-cols-2 gap-3">
+                                                            <div class="bg-slate-50 rounded-2xl p-4">
+                                                                <div class="text-xs font-bold text-slate-500 mb-2">Biodata</div>
+                                                                <div class="space-y-1 text-sm text-slate-700">
+                                                                    <div><b>TTL:</b> ${escapeHtml(data.birth_place)}, ${escapeHtml(data.birth_date)}</div>
+                                                                    <div><b>Jenis Kelamin:</b> ${escapeHtml(data.gender)}</div>
+                                                                    <div><b>HP:</b> ${escapeHtml(data.phone)}</div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="bg-slate-50 rounded-2xl p-4">
+                                                                <div class="text-xs font-bold text-slate-500 mb-2">Orang Tua</div>
+                                                                <div class="space-y-1 text-sm text-slate-700">
+                                                                    <div><b>Ayah:</b> ${escapeHtml(data.father_name)}</div>
+                                                                    <div><b>Ibu:</b> ${escapeHtml(data.mother_name)}</div>
+                                                                    <div><b>HP Ortu:</b> ${escapeHtml(data.parent_phone)}</div>
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="bg-blue-50 rounded-2xl p-4">
+                                                                <div class="text-xs font-bold text-blue-500 mb-2">Nilai Akademik</div>
+                                                                <div class="text-4xl font-extrabold text-blue-700">
+                                                                    ${escapeHtml(data.academic_score ?? 0)}
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="bg-slate-50 rounded-2xl p-4">
+                                                                <div class="text-xs font-bold text-slate-500 mb-2">Distribusi</div>
+                                                                <div class="space-y-1 text-sm text-slate-700">
+                                                                    <div><b>Rekomendasi:</b> ${escapeHtml(data.recommended)}</div>
+                                                                    <div><b>Final:</b> ${escapeHtml(data.final)}</div>
+                                                                    <div><b>Kelas:</b> ${escapeHtml(data.class_name)}</div>
+                                                                    <div><b>Tipe:</b> ${escapeHtml(data.distribution_type)}</div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
                                                         <div class="bg-slate-50 rounded-2xl p-4">
-                                                            <div class="text-xs font-bold text-slate-500 mb-2">Biodata</div>
-                                                            <div class="space-y-1 text-sm text-slate-700">
-                                                                <div><b>TTL:</b> ${escapeHtml(data.birth_place)}, ${escapeHtml(data.birth_date)}</div>
-                                                                <div><b>Jenis Kelamin:</b> ${escapeHtml(data.gender)}</div>
-                                                                <div><b>HP:</b> ${escapeHtml(data.phone)}</div>
+                                                            <div class="text-xs font-bold text-slate-500 mb-3">Pilihan Awal Jurusan</div>
+                                                            <div class="flex flex-wrap gap-2">
+                                                                <div class="px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold">
+                                                                    1. ${escapeHtml(data.first_choice)}
+                                                                </div>
+                                                                <div class="px-3 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-bold">
+                                                                    2. ${escapeHtml(data.second_choice)}
+                                                                </div>
                                                             </div>
                                                         </div>
 
                                                         <div class="bg-slate-50 rounded-2xl p-4">
-                                                            <div class="text-xs font-bold text-slate-500 mb-2">Orang Tua</div>
-                                                            <div class="space-y-1 text-sm text-slate-700">
-                                                                <div><b>Ayah:</b> ${escapeHtml(data.father_name)}</div>
-                                                                <div><b>Ibu:</b> ${escapeHtml(data.mother_name)}</div>
-                                                                <div><b>HP Ortu:</b> ${escapeHtml(data.parent_phone)}</div>
+                                                            <div class="text-xs font-bold text-slate-500 mb-3">Skor Psikotes</div>
+                                                            <div class="flex flex-wrap gap-2">
+                                                                ${psychologyBadges(data.psychology_scores)}
                                                             </div>
                                                         </div>
 
-                                                        <div class="bg-blue-50 rounded-2xl p-4">
-                                                            <div class="text-xs font-bold text-blue-500 mb-2">Nilai Akademik</div>
-                                                            <div class="text-4xl font-extrabold text-blue-700">
-                                                                ${escapeHtml(data.academic_score ?? 0)}
-                                                            </div>
-                                                        </div>
+                                                        <form method="POST"
+                                                            action="{{ route('admin.test-results.manual-update') }}"
+                                                            class="bg-white border border-slate-200 rounded-2xl p-4">
+                                                            @csrf
 
-                                                        <div class="bg-slate-50 rounded-2xl p-4">
-                                                            <div class="text-xs font-bold text-slate-500 mb-2">Distribusi</div>
-                                                            <div class="space-y-1 text-sm text-slate-700">
-                                                                <div><b>Rekomendasi:</b> ${escapeHtml(data.recommended)}</div>
-                                                                <div><b>Final:</b> ${escapeHtml(data.final)}</div>
-                                                                <div><b>Kelas:</b> ${escapeHtml(data.class_name)}</div>
-                                                                <div><b>Tipe:</b> ${escapeHtml(data.distribution_type)}</div>
+                                                            <input type="hidden" name="student_id" value="${escapeHtml(data.student_id)}">
+
+                                                            <div class="grid md:grid-cols-3 gap-3">
+                                                                <div>
+                                                                    <label class="block text-xs font-bold text-slate-500 mb-1">Final Jurusan</label>
+                                                                    <select name="final_package_id"
+                                                                        class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none">
+                                                                        ${packageOptions(data.final_package_id)}
+                                                                    </select>
+                                                                </div>
+
+                                                                <div>
+                                                                    <label class="block text-xs font-bold text-slate-500 mb-1">Kelas</label>
+                                                                    <select name="class_group_id"
+                                                                        class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none">
+                                                                        ${classGroupOptions(data.class_group_id)}
+                                                                    </select>
+                                                                </div>
+
+                                                                <div class="flex items-end">
+                                                                    <button class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-extrabold transition">
+                                                                        <i class="fa-solid fa-save"></i>
+                                                                        Simpan Edit
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        </form>
                                                     </div>
-
-                                                    <div class="bg-slate-50 rounded-2xl p-4">
-                                                        <div class="text-xs font-bold text-slate-500 mb-3">Pilihan Awal Jurusan</div>
-                                                        <div class="flex flex-wrap gap-2">
-                                                            <div class="px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold">
-                                                                1. ${escapeHtml(data.first_choice)}
-                                                            </div>
-                                                            <div class="px-3 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-bold">
-                                                                2. ${escapeHtml(data.second_choice)}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="bg-slate-50 rounded-2xl p-4">
-                                                        <div class="text-xs font-bold text-slate-500 mb-3">Skor Psikotes</div>
-                                                        <div class="flex flex-wrap gap-2">
-                                                            ${psychologyBadges(data.psychology_scores)}
-                                                        </div>
-                                                    </div>
-
-                                                    <form method="POST"
-                                                        action="{{ route('admin.test-results.manual-update') }}"
-                                                        class="bg-white border border-slate-200 rounded-2xl p-4">
-                                                        @csrf
-
-                                                        <input type="hidden" name="student_id" value="${escapeHtml(data.student_id)}">
-
-                                                        <div class="grid md:grid-cols-3 gap-3">
-                                                            <div>
-                                                                <label class="block text-xs font-bold text-slate-500 mb-1">Final Jurusan</label>
-                                                                <select name="final_package_id"
-                                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none">
-                                                                    ${packageOptions(data.final_package_id)}
-                                                                </select>
-                                                            </div>
-
-                                                            <div>
-                                                                <label class="block text-xs font-bold text-slate-500 mb-1">Kelas</label>
-                                                                <select name="class_group_id"
-                                                                    class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none">
-                                                                    ${classGroupOptions(data.class_group_id)}
-                                                                </select>
-                                                            </div>
-
-                                                            <div class="flex items-end">
-                                                                <button class="w-full inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-extrabold transition">
-                                                                    <i class="fa-solid fa-save"></i>
-                                                                    Simpan Edit
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
                                                 </div>
-                                            </div>
-                                        `;
+                                            `;
 
             document.getElementById('detailModal').classList.remove('hidden');
             document.getElementById('detailModal').classList.add('flex');

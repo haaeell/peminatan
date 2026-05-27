@@ -7,6 +7,7 @@ use App\Models\Package;
 use App\Models\PackageSubject;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PackageController extends Controller
 {
@@ -26,15 +27,31 @@ class PackageController extends Controller
             'capacity' => ['required', 'integer', 'min:1'],
             'color' => ['required', 'string', 'max:20'],
             'is_active' => ['nullable', 'boolean'],
+            'subjects' => ['required', 'array', 'min:1'],
+            'subjects.*' => ['required', 'string', 'max:150'],
         ]);
 
-        $package = Package::create($validated + [
-            'is_active' => $request->boolean('is_active'),
-        ]);
+        DB::transaction(function () use ($request, $validated, $logger) {
+            $package = Package::create([
+                'code' => $validated['code'],
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'capacity' => $validated['capacity'],
+                'color' => $validated['color'],
+                'is_active' => $request->boolean('is_active'),
+            ]);
 
-        $logger->log('package', 'create', $package);
+            foreach ($validated['subjects'] as $index => $subjectName) {
+                $package->subjects()->create([
+                    'subject_name' => $subjectName,
+                    'order' => $index + 1,
+                ]);
+            }
 
-        return back()->with('success', 'Jurusan berhasil dibuat.');
+            $logger->log('package', 'create', $package);
+        });
+
+        return back()->with('success', 'Paket berhasil dibuat.');
     }
 
     public function update(Request $request, Package $package, ActivityLogService $logger)
@@ -46,15 +63,33 @@ class PackageController extends Controller
             'capacity' => ['required', 'integer', 'min:1'],
             'color' => ['required', 'string', 'max:20'],
             'is_active' => ['nullable', 'boolean'],
+            'subjects' => ['required', 'array', 'min:1'],
+            'subjects.*' => ['required', 'string', 'max:150'],
         ]);
 
-        $package->update($validated + [
-            'is_active' => $request->boolean('is_active'),
-        ]);
+        DB::transaction(function () use ($request, $validated, $package, $logger) {
+            $package->update([
+                'code' => $validated['code'],
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?? null,
+                'capacity' => $validated['capacity'],
+                'color' => $validated['color'],
+                'is_active' => $request->boolean('is_active'),
+            ]);
 
-        $logger->log('package', 'update', $package);
+            $package->subjects()->delete();
 
-        return back()->with('success', 'Jurusan berhasil diperbarui.');
+            foreach ($validated['subjects'] as $index => $subjectName) {
+                $package->subjects()->create([
+                    'subject_name' => $subjectName,
+                    'order' => $index + 1,
+                ]);
+            }
+
+            $logger->log('package', 'update', $package);
+        });
+
+        return back()->with('success', 'Paket berhasil diperbarui.');
     }
 
     public function destroy(Package $package, ActivityLogService $logger)
