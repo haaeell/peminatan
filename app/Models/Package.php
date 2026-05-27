@@ -13,7 +13,6 @@ class Package extends Model
         'code',
         'name',
         'description',
-        'capacity',
         'color',
         'is_active',
     ];

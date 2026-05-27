@@ -24,7 +24,6 @@ class PackageController extends Controller
             'code' => ['required', 'string', 'max:20', 'unique:packages,code'],
             'name' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string'],
-            'capacity' => ['required', 'integer', 'min:1'],
             'color' => ['required', 'string', 'max:20'],
             'is_active' => ['nullable', 'boolean'],
             'subjects' => ['required', 'array', 'min:1'],
@@ -36,7 +35,6 @@ class PackageController extends Controller
                 'code' => $validated['code'],
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
-                'capacity' => $validated['capacity'],
                 'color' => $validated['color'],
                 'is_active' => $request->boolean('is_active'),
             ]);
@@ -60,7 +58,6 @@ class PackageController extends Controller
             'code' => ['required', 'string', 'max:20', 'unique:packages,code,' . $package->id],
             'name' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string'],
-            'capacity' => ['required', 'integer', 'min:1'],
             'color' => ['required', 'string', 'max:20'],
             'is_active' => ['nullable', 'boolean'],
             'subjects' => ['required', 'array', 'min:1'],
@@ -72,7 +69,6 @@ class PackageController extends Controller
                 'code' => $validated['code'],
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
-                'capacity' => $validated['capacity'],
                 'color' => $validated['color'],
                 'is_active' => $request->boolean('is_active'),
             ]);

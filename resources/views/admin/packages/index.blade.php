@@ -35,10 +35,6 @@
                         </th>
 
                         <th class="px-6 py-4 text-left text-xs font-extrabold uppercase tracking-wide text-slate-500">
-                            Kapasitas
-                        </th>
-
-                        <th class="px-6 py-4 text-left text-xs font-extrabold uppercase tracking-wide text-slate-500">
                             Status
                         </th>
 
@@ -91,13 +87,6 @@
                             </td>
 
                             <td class="px-6 py-5">
-                                <div
-                                    class="inline-flex items-center px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold">
-                                    {{ $package->capacity }} siswa
-                                </div>
-                            </td>
-
-                            <td class="px-6 py-5">
                                 @if ($package->is_active)
                                     <span
                                         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-green-50 text-green-700 text-xs font-extrabold">
@@ -120,8 +109,7 @@
                                         class="editBtn group w-11 h-11 inline-flex items-center justify-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 shadow-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300"
                                         data-id="{{ $package->id }}" data-code="{{ e($package->code) }}"
                                         data-name="{{ e($package->name) }}" data-description="{{ e($package->description) }}"
-                                        data-capacity="{{ $package->capacity }}" data-color="{{ $package->color }}"
-                                        data-is_active="{{ $package->is_active ? 1 : 0 }}"
+                                        data-color="{{ $package->color }}" data-is_active="{{ $package->is_active ? 1 : 0 }}"
                                         data-subjects='@json($package->subjects->sortBy('order')->pluck('subject_name')->values())'>
 
                                         <i
@@ -212,15 +200,6 @@
                         </label>
 
                         <input name="name" placeholder="Kelompok A"
-                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">
-                            Kapasitas
-                        </label>
-
-                        <input name="capacity" type="number" value="72"
                             class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
                     </div>
 
@@ -330,9 +309,6 @@
                     <input id="edit_name" name="name"
                         class="md:col-span-2 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200">
 
-                    <input id="edit_capacity" name="capacity" type="number"
-                        class="px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200">
-
                     <input id="edit_color" name="color" type="color" class="h-[52px] rounded-2xl border border-slate-200">
                 </div>
 
@@ -405,21 +381,21 @@
                     'beforeend',
 
                     `
-                <div class="relative">
+                                <div class="relative">
 
-                    <input name="subjects[]"
-                        placeholder="Nama mata pelajaran"
-                        class="w-full pr-12 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200
-                        focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+                                    <input name="subjects[]"
+                                        placeholder="Nama mata pelajaran"
+                                        class="w-full pr-12 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200
+                                        focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
 
-                    <button type="button"
-                        onclick="removeSubjectField(this)"
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+                                    <button type="button"
+                                        onclick="removeSubjectField(this)"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
 
-                </div>
-                `
+                                </div>
+                                `
                 );
         }
 
@@ -436,7 +412,6 @@
             const code = $(this).data('code');
             const name = $(this).data('name');
             const description = $(this).data('description');
-            const capacity = $(this).data('capacity');
             const color = $(this).data('color');
             const isActive = $(this).data('is_active');
             const subjects = $(this).data('subjects') || [];
@@ -449,7 +424,6 @@
             $('#edit_code').val(code);
             $('#edit_name').val(name);
             $('#edit_description').val(description);
-            $('#edit_capacity').val(capacity);
             $('#edit_color').val(color);
             $('#edit_is_active').prop('checked', isActive == 1);
 
@@ -457,21 +431,21 @@
 
             subjects.forEach(function (subject) {
                 $('#editSubjectWrapper').append(`
-        <div class="relative">
+                        <div class="relative">
 
-            <input name="subjects[]"
-                value="${escapeAttr(subject)}"
-                class="w-full pr-12 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200
-                focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+                            <input name="subjects[]"
+                                value="${escapeAttr(subject)}"
+                                class="w-full pr-12 px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200
+                                focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
 
-            <button type="button"
-                onclick="removeSubjectField(this)"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+                            <button type="button"
+                                onclick="removeSubjectField(this)"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-red-500 hover:text-red-700">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
 
-        </div>
-    `);
+                        </div>
+                    `);
             });
 
             document.getElementById('editModal').classList.remove('hidden');

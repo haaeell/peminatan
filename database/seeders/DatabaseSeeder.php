@@ -100,7 +100,6 @@ class DatabaseSeeder extends Seeder
                 'code' => 'A',
                 'name' => 'Paket A',
                 'description' => 'Paket peminatan Fisika, Kimia, Matematika Lanjut, dan Geografi',
-                'capacity' => 72,
                 'color' => '#9ca3af',
                 'is_active' => true,
                 'created_at' => now(),
@@ -111,7 +110,6 @@ class DatabaseSeeder extends Seeder
                 'code' => 'B',
                 'name' => 'Paket B',
                 'description' => 'Paket peminatan Kimia, Biologi, Sosiologi, dan Bahasa Inggris Lanjut',
-                'capacity' => 72,
                 'color' => '#86efac',
                 'is_active' => true,
                 'created_at' => now(),
@@ -122,7 +120,6 @@ class DatabaseSeeder extends Seeder
                 'code' => 'C',
                 'name' => 'Paket C',
                 'description' => 'Paket peminatan Sosiologi, Ekonomi, Bahasa Inggris Lanjut, dan Bahasa Jerman',
-                'capacity' => 72,
                 'color' => '#fdba74',
                 'is_active' => true,
                 'created_at' => now(),
@@ -133,7 +130,6 @@ class DatabaseSeeder extends Seeder
                 'code' => 'D',
                 'name' => 'Paket D',
                 'description' => 'Paket peminatan Ekonomi, Geografi, Sejarah Lanjut, dan Bahasa Jerman',
-                'capacity' => 72,
                 'color' => '#93c5fd',
                 'is_active' => true,
                 'created_at' => now(),
@@ -143,10 +139,10 @@ class DatabaseSeeder extends Seeder
             $packageIds = [$kelompokA, $kelompokB, $kelompokC, $kelompokD];
 
             /*
-|--------------------------------------------------------------------------
-| PACKAGE SUBJECTS / MATA PELAJARAN PAKET
-|--------------------------------------------------------------------------
-*/
+            |--------------------------------------------------------------------------
+            | PACKAGE SUBJECTS / MATA PELAJARAN PAKET
+            |--------------------------------------------------------------------------
+            */
             $subjects = [
                 $kelompokA => [
                     'Fisika',
