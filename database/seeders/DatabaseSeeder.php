@@ -189,21 +189,11 @@ class DatabaseSeeder extends Seeder
     {
         $students = [
             ['name' => 'Alya Putri Maharani', 'nisn' => '2026000001', 'nis' => '260001', 'origin_class' => 'X A', 'status' => 'onboarding'],
-            ['name' => 'Bagas Pratama', 'nisn' => '2026000002', 'nis' => '260002', 'origin_class' => 'X B', 'status' => 'biodata'],
-            ['name' => 'Citra Lestari', 'nisn' => '2026000003', 'nis' => '260003', 'origin_class' => 'X C', 'status' => 'package_choice'],
-            ['name' => 'Dimas Ramadhan', 'nisn' => '2026000004', 'nis' => '260004', 'origin_class' => 'X D', 'status' => 'selfie'],
-            ['name' => 'Elsa Permata', 'nisn' => '2026000005', 'nis' => '260005', 'origin_class' => 'X E', 'status' => 'waiting_session'],
-            ['name' => 'Farhan Rizky', 'nisn' => '2026000006', 'nis' => '260006', 'origin_class' => 'X F', 'status' => 'waiting_session'],
-        ];
-
-        $packageIds = DB::table('packages')->pluck('id', 'code')->all();
-        $packagePairs = [
-            ['first' => $packageIds['A'], 'second' => $packageIds['B']],
-            ['first' => $packageIds['B'], 'second' => $packageIds['A']],
-            ['first' => $packageIds['C'], 'second' => $packageIds['D']],
-            ['first' => $packageIds['D'], 'second' => $packageIds['C']],
-            ['first' => $packageIds['A'], 'second' => $packageIds['D']],
-            ['first' => $packageIds['B'], 'second' => $packageIds['C']],
+            ['name' => 'Bagas Pratama', 'nisn' => '2026000002', 'nis' => '260002', 'origin_class' => 'X B', 'status' => 'onboarding'],
+            ['name' => 'Citra Lestari', 'nisn' => '2026000003', 'nis' => '260003', 'origin_class' => 'X C', 'status' => 'onboarding'],
+            ['name' => 'Dimas Ramadhan', 'nisn' => '2026000004', 'nis' => '260004', 'origin_class' => 'X D', 'status' => 'onboarding'],
+            ['name' => 'Elsa Permata', 'nisn' => '2026000005', 'nis' => '260005', 'origin_class' => 'X E', 'status' => 'onboarding'],
+            ['name' => 'Farhan Rizky', 'nisn' => '2026000006', 'nis' => '260006', 'origin_class' => 'X F', 'status' => 'onboarding'],
         ];
 
         foreach ($students as $index => $student) {
@@ -223,40 +213,6 @@ class DatabaseSeeder extends Seeder
                 'origin_class' => $student['origin_class'],
                 'status' => $student['status'],
             ]));
-
-            if (in_array($student['status'], ['package_choice', 'selfie', 'waiting_session'], true)) {
-                DB::table('student_biodatas')->insert($this->timestampedRow([
-                    'student_id' => $studentId,
-                    'birth_place' => 'Kota Contoh',
-                    'birth_date' => '2010-0' . (($index % 6) + 1) . '-15',
-                    'gender' => $index % 2 === 0 ? 'P' : 'L',
-                    'address' => 'Jl. Pendidikan No. ' . ($index + 1),
-                    'phone' => '0812000000' . ($index + 1),
-                    'father_name' => 'Bapak ' . explode(' ', $student['name'])[0],
-                    'mother_name' => 'Ibu ' . explode(' ', $student['name'])[0],
-                    'parent_phone' => '0813000000' . ($index + 1),
-                ]));
-            }
-
-            if (in_array($student['status'], ['selfie', 'waiting_session'], true)) {
-                DB::table('student_package_choices')->insert($this->timestampedRow([
-                    'student_id' => $studentId,
-                    'first_package_id' => $packagePairs[$index]['first'],
-                    'second_package_id' => $packagePairs[$index]['second'],
-                ]));
-            }
-
-            if ($student['status'] === 'waiting_session') {
-                DB::table('student_selfies')->insert($this->timestampedRow([
-                    'student_id' => $studentId,
-                    'path' => 'selfies/default-avatar.png',
-                    'device_info' => json_encode([
-                        'browser' => 'Seeder',
-                        'platform' => 'Laravel',
-                    ]),
-                    'captured_at' => now(),
-                ]));
-            }
         }
     }
 
