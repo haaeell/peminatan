@@ -93,11 +93,11 @@ class TestSessionController extends Controller
         return back()->with('success', 'Kelas berhasil ditambahkan ke sesi.');
     }
 
-    public function destroyClass(TestSession $testSession, TestSessionClass $class)
+    public function destroyClass(TestSession $testSession, TestSessionClass $testSessionClass)
     {
-        abort_if($class->test_session_id !== $testSession->id, 404);
+        abort_if($testSessionClass->test_session_id !== $testSession->id, 404);
 
-        $class->delete();
+        $testSessionClass->delete();
 
         return back()->with('success', 'Kelas berhasil dihapus dari sesi.');
     }

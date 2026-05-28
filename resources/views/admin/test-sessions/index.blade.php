@@ -197,17 +197,12 @@
                                     <i class="fa-solid fa-users text-xs text-blue-500"></i>
                                     <span>{{ $class->origin_class }}</span>
 
-                                    <form id="delete-session-class-{{ $class->id }}" method="POST"
-                                        action="{{ route('admin.test-sessions.classes.destroy', [$session, $class]) }}">
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button type="button" onclick="confirmDelete('delete-session-class-{{ $class->id }}')"
-                                            class="w-7 h-7 inline-flex items-center justify-center rounded-xl text-slate-400 hover:bg-blue-600 hover:text-white transition"
-                                            title="Hapus kelas">
-                                            <i class="fa-solid fa-xmark text-xs"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button"
+                                        class="deleteSessionClassBtn w-7 h-7 inline-flex items-center justify-center rounded-xl text-slate-400 hover:bg-blue-600 hover:text-white transition"
+                                        data-action="{{ route('admin.test-sessions.classes.destroy', [$session, $class]) }}"
+                                        title="Hapus kelas">
+                                        <i class="fa-solid fa-xmark text-xs"></i>
+                                    </button>
                                 </div>
                             @empty
                                 <div class="text-sm text-slate-400">Belum ada kelas. Tambahkan minimal satu kelas agar sesi bisa dipakai dengan jelas.</div>
@@ -269,6 +264,11 @@
                 </div>
             @endforelse
         </div>
+
+        <form id="deleteSessionClassForm" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
 
         @if($sessions->hasPages())
             <div class="bg-white border border-slate-200 rounded-[24px] px-4 py-3 shadow-sm">
@@ -370,6 +370,13 @@
                 $('#edit_is_active').prop('checked', Number($(this).data('is_active')) === 1);
 
                 $('#editModal').removeClass('hidden').addClass('flex');
+            });
+
+            $('.deleteSessionClassBtn').on('click', function () {
+                const action = $(this).data('action');
+
+                $('#deleteSessionClassForm').attr('action', action);
+                confirmDelete('deleteSessionClassForm');
             });
 
             function closeEditModal() {
