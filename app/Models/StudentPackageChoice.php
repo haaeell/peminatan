@@ -10,6 +10,7 @@ class StudentPackageChoice extends Model
         'student_id',
         'first_package_id',
         'second_package_id',
+        'post_graduation_plan',
     ];
 
     public function student()

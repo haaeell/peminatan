@@ -103,11 +103,14 @@
 
                     <select name="gender" class="input" required>
                         <option value="">Jenis Kelamin</option>
-                        <option value="L" {{ old('gender', $student->biodata?->gender) === 'L' ? 'selected' : '' }}>Laki-laki</option>
-                        <option value="P" {{ old('gender', $student->biodata?->gender) === 'P' ? 'selected' : '' }}>Perempuan</option>
+                        <option value="L" {{ old('gender', $student->biodata?->gender) === 'L' ? 'selected' : '' }}>Laki-laki
+                        </option>
+                        <option value="P" {{ old('gender', $student->biodata?->gender) === 'P' ? 'selected' : '' }}>Perempuan
+                        </option>
                     </select>
 
-                    <textarea name="address" rows="4" placeholder="Alamat lengkap" class="input" required>{{ old('address', $student->biodata?->address) }}</textarea>
+                    <textarea name="address" rows="4" placeholder="Alamat lengkap" class="input"
+                        required>{{ old('address', $student->biodata?->address) }}</textarea>
 
                     <div class="grid md:grid-cols-2 gap-4">
                         <input name="phone" placeholder="No HP siswa" class="input"
@@ -175,8 +178,7 @@
                         <select name="first_package_id" class="input" required>
                             <option value="">Pilihan 1</option>
                             @foreach($packages as $package)
-                                <option value="{{ $package->id }}"
-                                    {{ (string) old('first_package_id', $student->packageChoice?->first_package_id) === (string) $package->id ? 'selected' : '' }}>
+                                <option value="{{ $package->id }}" {{ (string) old('first_package_id', $student->packageChoice?->first_package_id) === (string) $package->id ? 'selected' : '' }}>
                                     {{ $package->name }}
                                 </option>
                             @endforeach
@@ -185,12 +187,20 @@
                         <select name="second_package_id" class="input" required>
                             <option value="">Pilihan 2</option>
                             @foreach($packages as $package)
-                                <option value="{{ $package->id }}"
-                                    {{ (string) old('second_package_id', $student->packageChoice?->second_package_id) === (string) $package->id ? 'selected' : '' }}>
+                                <option value="{{ $package->id }}" {{ (string) old('second_package_id', $student->packageChoice?->second_package_id) === (string) $package->id ? 'selected' : '' }}>
                                     {{ $package->name }}
                                 </option>
                             @endforeach
                         </select>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Setelah lulus, Anda ingin melanjutkan ke
+                                mana?</label>
+                            <input name="post_graduation_plan"
+                                value="{{ old('post_graduation_plan', $student->packageChoice?->post_graduation_plan) }}"
+                                placeholder="Contoh: Kuliah Teknik Informatika di UI, kerja, wirausaha, atau rencana lainnya"
+                                class="input" required>
+                        </div>
 
                         <button type="submit" class="btn-primary">
                             <i class="fa-solid fa-check"></i>
@@ -201,7 +211,8 @@
             @endif
 
             @if($student->status === 'selfie')
-                <div id="selfieStep" class="max-w-3xl mx-auto bg-white border border-slate-200 rounded-[32px] p-6 md:p-8 shadow-sm">
+                <div id="selfieStep"
+                    class="max-w-3xl mx-auto bg-white border border-slate-200 rounded-[32px] p-6 md:p-8 shadow-sm">
                     <h2 class="text-2xl font-extrabold text-slate-900">Verifikasi Selfie</h2>
                     <p class="text-slate-500 mt-2 mb-6">Pastikan wajah terlihat jelas dan pencahayaan cukup.</p>
 
@@ -233,7 +244,8 @@
             @endif
 
             @if($student->status === 'waiting_session')
-                <div class="max-w-3xl mx-auto text-center bg-white border border-slate-200 rounded-[32px] p-8 md:p-10 shadow-sm">
+                <div
+                    class="max-w-3xl mx-auto text-center bg-white border border-slate-200 rounded-[32px] p-8 md:p-10 shadow-sm">
                     <div class="w-20 h-20 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-6">
                         <i class="fa-solid fa-clock text-4xl"></i>
                     </div>
@@ -241,8 +253,15 @@
                     <h2 class="text-2xl font-extrabold text-slate-900">Menunggu Sesi Tes</h2>
 
                     <p class="text-slate-500 mt-3">
-                        Anda akan diarahkan saat sesi tes sudah dibuka.
+                        Data Anda sudah lengkap. Silakan tunggu sampai admin membuka sesi tes sesuai jadwal untuk kelas Anda.
                     </p>
+
+                    <div class="mt-6 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-left text-sm text-blue-700">
+                        <p class="font-bold mb-2">Yang perlu Anda lakukan sambil menunggu:</p>
+                        <div>1. Cek halaman ini secara berkala untuk melihat jadwal sesi yang aktif.</div>
+                        <div>2. Pastikan perangkat, jaringan internet, dan kamera siap digunakan.</div>
+                        <div>3. Gunakan akun Anda sendiri dan jangan membagikan akses ke orang lain.</div>
+                    </div>
 
                     <a href="{{ route('siswa.waiting-session') }}" class="btn-primary mt-6">
                         <i class="fa-solid fa-calendar-days"></i>
@@ -251,10 +270,33 @@
                 </div>
             @endif
 
+            @if($student->status === 'completed' && !$announcement)
+                <div
+                    class="max-w-3xl mx-auto text-center bg-white border border-slate-200 rounded-[32px] p-8 md:p-10 shadow-sm">
+                    <div class="w-20 h-20 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-6">
+                        <i class="fa-solid fa-bullhorn text-4xl"></i>
+                    </div>
+
+                    <h2 class="text-2xl font-extrabold text-slate-900">Tes Selesai, Menunggu Pengumuman</h2>
+
+                    <p class="text-slate-500 mt-3">
+                        Seluruh tahapan tes Anda sudah selesai. Hasil penempatan jurusan dan kelas akan ditampilkan setelah
+                        pengumuman resmi dipublikasikan oleh admin sekolah.
+                    </p>
+
+                    <div class="mt-6 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-left text-sm text-blue-700">
+                        <p class="font-bold mb-2">Informasi penting:</p>
+                        <div>1. Silakan cek halaman ini secara berkala untuk melihat pengumuman terbaru.</div>
+                        <div>2. Simpan akun Anda dengan baik karena hasil dan surat keterangan akan diakses dari akun ini.</div>
+                        <div>3. Jika ada kendala atau informasi yang belum jelas, segera hubungi admin sekolah.</div>
+                    </div>
+                </div>
+            @endif
+
             @if($announcement)
                 <div class="max-w-3xl mx-auto mt-4">
                     <a href="{{ route('siswa.announcements.index') }}" class="flex items-center justify-between gap-4 bg-blue-600 hover:bg-blue-700
-                    text-white rounded-2xl px-5 py-4 shadow-lg shadow-blue-200 transition-all duration-300">
+                            text-white rounded-2xl px-5 py-4 shadow-lg shadow-blue-200 transition-all duration-300">
 
                         <div class="flex items-center gap-4">
                             <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">

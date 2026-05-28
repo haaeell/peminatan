@@ -82,6 +82,7 @@ class WizardController extends Controller
                 'exists:packages,id',
                 'different:first_package_id',
             ],
+            'post_graduation_plan' => ['required', 'string', 'max:255'],
         ]);
 
         $student = auth()->user()->student;

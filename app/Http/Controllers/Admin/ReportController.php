@@ -107,6 +107,7 @@ class ReportController extends Controller
             'No HP Ortu',
             'Pilihan 1',
             'Pilihan 2',
+            'Rencana Setelah Lulus',
             'Kelas Hasil',
         ];
 
@@ -130,6 +131,7 @@ class ReportController extends Controller
                 $biodata?->parent_phone ?: '-',
                 $student->packageChoice?->firstPackage?->name ?: '-',
                 $student->packageChoice?->secondPackage?->name ?: '-',
+                $student->packageChoice?->post_graduation_plan ?: '-',
                 $student->classStudent?->classGroup?->name ?: '-',
             ];
         })->all();
@@ -171,6 +173,7 @@ class ReportController extends Controller
             'Kelas Hasil',
             'Pilihan 1',
             'Pilihan 2',
+            'Rencana Setelah Lulus',
         ];
 
         $rows = $results->map(function ($result) use ($packageMap) {
@@ -185,6 +188,7 @@ class ReportController extends Controller
                 $result->student?->classStudent?->classGroup?->name ?: '-',
                 $result->student?->packageChoice?->firstPackage?->name ?: '-',
                 $result->student?->packageChoice?->secondPackage?->name ?: '-',
+                $result->student?->packageChoice?->post_graduation_plan ?: '-',
             ];
         })->all();
 

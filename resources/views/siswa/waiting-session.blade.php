@@ -19,6 +19,13 @@
                     <span class="font-extrabold text-blue-600">{{ $student->origin_class }}</span>
                 </p>
 
+                <div class="rounded-[28px] border border-blue-100 bg-blue-50 p-5 text-left text-sm text-blue-700 mb-6">
+                    <p class="font-bold mb-2">Informasi penting sebelum tes dimulai:</p>
+                    <div>1. Silakan cek halaman ini secara berkala sampai sesi untuk kelas Anda dibuka.</div>
+                    <div>2. Masuk ke sesi hanya saat jadwal sudah aktif agar proses ujian berjalan lancar.</div>
+                    <div>3. Pastikan perangkat, koneksi internet, dan kamera sudah siap sebelum mulai mengerjakan tes.</div>
+                </div>
+
                 @if($session)
                     <div class="bg-blue-50 border border-blue-100 rounded-[28px] p-5 md:p-6 text-left mb-6">
                         <div class="flex items-start gap-4 mb-5">

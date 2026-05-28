@@ -21,7 +21,7 @@
                         </h1>
 
                         <p class="text-slate-500 mt-2">
-                            Lihat hasil penempatan jurusan dan kelas Anda.
+                            Lihat hasil penempatan jurusan dan kelas Anda, lalu baca informasi lanjutannya dengan teliti.
                         </p>
                     </div>
                 </div>
@@ -38,8 +38,15 @@
                         </h2>
 
                         <p class="text-slate-500 mt-3">
-                            Pengumuman hasil belum dipublikasikan. Silakan cek kembali secara berkala.
+                            Pengumuman hasil belum dipublikasikan. Silakan cek kembali secara berkala melalui akun ini karena hasil, respons, dan surat keterangan akan ditampilkan di sini setelah dirilis oleh admin sekolah.
                         </p>
+
+                        <div class="mt-6 rounded-[28px] border border-blue-100 bg-blue-50 p-5 text-left text-sm text-blue-700">
+                            <p class="font-bold mb-2">Sambil menunggu pengumuman:</p>
+                            <div>1. Pastikan Anda tetap bisa login menggunakan akun yang sama.</div>
+                            <div>2. Silakan cek halaman ini secara berkala untuk informasi terbaru.</div>
+                            <div>3. Jika ada kendala akses atau data belum sesuai, hubungi admin sekolah.</div>
+                        </div>
                     </div>
                 @else
                     <div class="bg-blue-50 border border-blue-100 rounded-[28px] p-5 md:p-6 mb-6">
@@ -54,6 +61,16 @@
                         <p class="text-slate-600 mt-3 leading-relaxed">
                             {{ $announcement->content }}
                         </p>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-[28px] p-5 md:p-6 mb-6">
+                        <h3 class="text-lg font-extrabold text-slate-900">Petunjuk Setelah Pengumuman</h3>
+                        <div class="mt-3 space-y-2 text-sm text-slate-600 leading-relaxed">
+                            <div>1. Baca hasil penempatan Anda dengan teliti hingga selesai.</div>
+                            <div>2. Jika setuju, gunakan tombol penerimaan agar status Anda tercatat di sistem.</div>
+                            <div>3. Jika belum setuju, tuliskan alasan keberatan secara jelas dan lengkap agar admin mudah menindaklanjuti.</div>
+                            <div>4. Tetap cek halaman ini secara berkala untuk pembaruan status, keputusan keberatan, atau surat keterangan final.</div>
+                        </div>
                     </div>
 
                     @if($classStudent)
@@ -101,7 +118,7 @@
                         <form method="POST" action="{{ route('siswa.announcements.object', $announcement) }}" class="space-y-3">
                             @csrf
 
-                            <textarea name="reason" rows="4" placeholder="Tulis alasan keberatan"
+                            <textarea name="reason" rows="4" placeholder="Tulis alasan keberatan Anda secara jelas, misalnya alasan akademik, minat jurusan, atau data yang perlu ditinjau ulang"
                                 class="w-full p-4 rounded-2xl bg-white border border-slate-200 text-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition"></textarea>
 
                             <button

@@ -258,6 +258,13 @@
                                                         </div>
 
                                                         <div class="bg-slate-50 rounded-2xl p-4">
+                                                            <div class="text-xs font-bold text-slate-500 mb-2">Rencana Setelah Lulus</div>
+                                                            <div class="text-sm text-slate-700 leading-relaxed">
+                                                                ${escapeHtml(data.post_graduation_plan)}
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="bg-slate-50 rounded-2xl p-4">
                                                             <div class="text-xs font-bold text-slate-500 mb-3">Skor Psikotes</div>
                                                             <div class="flex flex-wrap gap-2">
                                                                 ${psychologyBadges(data.psychology_scores)}

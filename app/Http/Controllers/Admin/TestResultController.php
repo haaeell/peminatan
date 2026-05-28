@@ -130,8 +130,9 @@ class TestResultController extends Controller
 
                     'academic_score' => $result->academic_score,
 
-                    'first_choice' => $student?->packageChoice?->firstPackage?->name,
-                    'second_choice' => $student?->packageChoice?->secondPackage?->name,
+                     'first_choice' => $student?->packageChoice?->firstPackage?->name,
+                     'second_choice' => $student?->packageChoice?->secondPackage?->name,
+                     'post_graduation_plan' => $student?->packageChoice?->post_graduation_plan,
 
                     'recommended' => $result->recommendedPackage?->name,
                     'final' => $result->finalPackage?->name,
@@ -221,6 +222,7 @@ class TestResultController extends Controller
                 'Jurusan Final',
                 'Pilihan 1',
                 'Pilihan 2',
+                'Rencana Setelah Lulus',
             ]);
 
             TestResult::with([
@@ -239,6 +241,7 @@ class TestResultController extends Controller
                         $result->finalPackage?->name,
                         $result->student?->packageChoice?->firstPackage?->name,
                         $result->student?->packageChoice?->secondPackage?->name,
+                        $result->student?->packageChoice?->post_graduation_plan,
                     ]);
                 }
             });

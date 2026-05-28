@@ -33,11 +33,12 @@
                 </div>
             </div>
 
-            {{-- @if(!empty($cbtSettings['student_help_text']))
-                <div class="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
-                    <i class="fa-solid fa-circle-info mr-2"></i>{{ $cbtSettings['student_help_text'] }}
+            <div class="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                <div class="font-bold mb-1">
+                    Perhatian: jika melakukan pelanggaran sebanyak {{ (int) $cbtSettings['violation_limit'] }} kali, sistem akan mengirim jawaban Anda secara otomatis.
                 </div>
-            @endif --}}
+                <div>Kerjakan tes dengan tertib, tetap di halaman ujian, dan hindari tindakan yang memicu pelanggaran sistem.</div>
+            </div>
 
             <div class="mt-4 h-3 bg-slate-200 rounded-full overflow-hidden">
                 <div id="progressBar"
