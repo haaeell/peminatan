@@ -105,7 +105,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/test-sessions/{testSession}/classes', [TestSessionController::class, 'storeClass'])
             ->name('test-sessions.classes.store');
 
-        Route::delete('/test-sessions/{testSession}/classes/{testSessionClass}', [TestSessionController::class, 'destroyClass'])
+        Route::delete('/test-sessions/{testSession}/classes/{classId}', [TestSessionController::class, 'destroyClass'])
             ->name('test-sessions.classes.destroy');
 
         /*

@@ -199,7 +199,7 @@
 
                                     <button type="button"
                                         class="deleteSessionClassBtn w-7 h-7 inline-flex items-center justify-center rounded-xl text-slate-400 hover:bg-blue-600 hover:text-white transition"
-                                        data-action="{{ route('admin.test-sessions.classes.destroy', [$session, $class]) }}"
+                                        data-action="{{ route('admin.test-sessions.classes.destroy', [$session, $class->id]) }}"
                                         title="Hapus kelas">
                                         <i class="fa-solid fa-xmark text-xs"></i>
                                     </button>

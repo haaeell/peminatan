@@ -93,9 +93,15 @@ class TestSessionController extends Controller
         return back()->with('success', 'Kelas berhasil ditambahkan ke sesi.');
     }
 
-    public function destroyClass(TestSession $testSession, TestSessionClass $testSessionClass)
+    public function destroyClass(TestSession $testSession, int $classId)
     {
-        abort_if($testSessionClass->test_session_id !== $testSession->id, 404);
+        $testSessionClass = TestSessionClass::where('test_session_id', $testSession->id)
+            ->whereKey($classId)
+            ->first();
+
+        if (!$testSessionClass) {
+            return back()->with('warning', 'Kelas tidak ditemukan pada sesi ini atau sudah dihapus.');
+        }
 
         $testSessionClass->delete();
 
