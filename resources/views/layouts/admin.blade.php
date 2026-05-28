@@ -14,14 +14,10 @@
             ->count();
         $unpublishedAnnouncementsCount = \App\Models\Announcement::where('is_published', false)->count();
         $latestAnnouncement = \App\Models\Announcement::latest()->first();
-        $studentsInExamCount = \Illuminate\Support\Facades\DB::table('student_test_sessions')
-            ->where('status', 'in_progress')
-            ->count();
 
         $notificationCount = $pendingObjectionsCount
             + $todaySessionsCount
-            + $unpublishedAnnouncementsCount
-            + $studentsInExamCount;
+            + $unpublishedAnnouncementsCount;
 
         $adminSearchItems = [
             ['title' => 'Dashboard', 'description' => 'Ringkasan aktivitas dan statistik utama', 'icon' => 'fa-chart-line', 'url' => route('admin.dashboard'), 'keywords' => 'home statistik ringkasan'],
@@ -443,18 +439,20 @@
                     {{-- Search --}}
                     <div class="hidden lg:block relative w-96" id="adminSearch">
                         <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input id="adminSearchInput" type="text" placeholder="Cari menu atau data..."
-                            autocomplete="off"
+                        <input id="adminSearchInput" type="text" placeholder="Cari menu atau data..." autocomplete="off"
                             class="w-full pl-11 pr-24 py-3 rounded-2xl border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
-                        <div class="absolute right-3 top-1/2 -translate-y-1/2 hidden xl:inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-400">
+                        <div
+                            class="absolute right-3 top-1/2 -translate-y-1/2 hidden xl:inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-400">
                             Ctrl K
                         </div>
 
                         <div id="adminSearchPanel"
                             class="hidden absolute right-0 top-full mt-3 w-[28rem] rounded-[24px] border border-slate-200 bg-white shadow-2xl shadow-slate-200/70 overflow-hidden z-50">
                             <div class="px-4 py-3 border-b border-slate-100">
-                                <p class="text-xs font-extrabold uppercase tracking-wide text-slate-400">Pencarian Cepat</p>
-                                <p class="text-sm text-slate-500 mt-1">Ketik nama menu, modul, atau kata kunci operasional.</p>
+                                <p class="text-xs font-extrabold uppercase tracking-wide text-slate-400">Pencarian Cepat
+                                </p>
+                                <p class="text-sm text-slate-500 mt-1">Ketik nama menu, modul, atau kata kunci
+                                    operasional.</p>
                             </div>
 
                             <div id="adminSearchResults" class="max-h-[420px] overflow-y-auto p-2"></div>
@@ -467,7 +465,8 @@
                             class="relative w-11 h-11 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition">
                             <i class="fa-regular fa-bell"></i>
                             @if($notificationCount > 0)
-                                <span class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold flex items-center justify-center">
+                                <span
+                                    class="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold flex items-center justify-center">
                                     {{ $notificationCount > 9 ? '9+' : $notificationCount }}
                                 </span>
                             @endif
@@ -480,7 +479,8 @@
                                     <p class="font-extrabold text-slate-900">Notifikasi</p>
                                     <p class="text-xs text-slate-500 mt-1">Ringkasan yang perlu cepat dicek admin.</p>
                                 </div>
-                                <span class="inline-flex items-center justify-center min-w-8 h-8 rounded-xl bg-blue-50 text-blue-700 text-xs font-extrabold">
+                                <span
+                                    class="inline-flex items-center justify-center min-w-8 h-8 rounded-xl bg-blue-50 text-blue-700 text-xs font-extrabold">
                                     {{ $notificationCount }}
                                 </span>
                             </div>
@@ -488,55 +488,49 @@
                             <div class="p-2 max-h-[420px] overflow-y-auto">
                                 <a href="{{ route('admin.objections.index') }}"
                                     class="flex items-start gap-3 rounded-2xl px-3 py-3 hover:bg-blue-50 transition">
-                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                                         <i class="fa-solid fa-message"></i>
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <div class="flex items-center justify-between gap-3">
                                             <p class="font-bold text-slate-900">Keberatan pending</p>
-                                            <span class="text-xs font-extrabold text-blue-700">{{ $pendingObjectionsCount }}</span>
+                                            <span
+                                                class="text-xs font-extrabold text-blue-700">{{ $pendingObjectionsCount }}</span>
                                         </div>
-                                        <p class="text-xs text-slate-500 mt-1">Review alasan siswa dan beri keputusan admin.</p>
-                                    </div>
-                                </a>
-
-                                <a href="{{ route('admin.exam-monitoring.index') }}"
-                                    class="flex items-start gap-3 rounded-2xl px-3 py-3 hover:bg-blue-50 transition">
-                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                                        <i class="fa-solid fa-desktop"></i>
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex items-center justify-between gap-3">
-                                            <p class="font-bold text-slate-900">Siswa sedang ujian</p>
-                                            <span class="text-xs font-extrabold text-blue-700">{{ $studentsInExamCount }}</span>
-                                        </div>
-                                        <p class="text-xs text-slate-500 mt-1">Pantau aktivitas ujian yang sedang berlangsung.</p>
+                                        <p class="text-xs text-slate-500 mt-1">Review alasan siswa dan beri keputusan
+                                            admin.</p>
                                     </div>
                                 </a>
 
                                 <a href="{{ route('admin.test-sessions.index') }}"
                                     class="flex items-start gap-3 rounded-2xl px-3 py-3 hover:bg-blue-50 transition">
-                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                                         <i class="fa-solid fa-clock"></i>
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <div class="flex items-center justify-between gap-3">
                                             <p class="font-bold text-slate-900">Sesi aktif hari ini</p>
-                                            <span class="text-xs font-extrabold text-blue-700">{{ $todaySessionsCount }}</span>
+                                            <span
+                                                class="text-xs font-extrabold text-blue-700">{{ $todaySessionsCount }}</span>
                                         </div>
-                                        <p class="text-xs text-slate-500 mt-1">{{ $activeSessionsCount }} sesi aktif tersimpan di sistem.</p>
+                                        <p class="text-xs text-slate-500 mt-1">{{ $activeSessionsCount }} sesi aktif
+                                            tersimpan di sistem.</p>
                                     </div>
                                 </a>
 
                                 <a href="{{ route('admin.announcements.index') }}"
                                     class="flex items-start gap-3 rounded-2xl px-3 py-3 hover:bg-blue-50 transition">
-                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                                         <i class="fa-solid fa-bullhorn"></i>
                                     </div>
                                     <div class="min-w-0 flex-1">
                                         <div class="flex items-center justify-between gap-3">
                                             <p class="font-bold text-slate-900">Pengumuman draft</p>
-                                            <span class="text-xs font-extrabold text-blue-700">{{ $unpublishedAnnouncementsCount }}</span>
+                                            <span
+                                                class="text-xs font-extrabold text-blue-700">{{ $unpublishedAnnouncementsCount }}</span>
                                         </div>
                                         <p class="text-xs text-slate-500 mt-1">
                                             {{ $latestAnnouncement ? 'Terakhir: ' . $latestAnnouncement->title : 'Belum ada pengumuman.' }}
@@ -546,11 +540,13 @@
 
                                 @if($notificationCount === 0)
                                     <div class="px-4 py-8 text-center">
-                                        <div class="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                                        <div
+                                            class="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mx-auto mb-3">
                                             <i class="fa-regular fa-circle-check"></i>
                                         </div>
                                         <p class="font-bold text-slate-900">Semua aman</p>
-                                        <p class="text-xs text-slate-500 mt-1">Belum ada item yang perlu perhatian cepat.</p>
+                                        <p class="text-xs text-slate-500 mt-1">Belum ada item yang perlu perhatian cepat.
+                                        </p>
                                     </div>
                                 @endif
                             </div>
