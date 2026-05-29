@@ -119,7 +119,7 @@
                     </div>
 
                     <div class="space-y-3">
-                        @foreach(['A', 'B', 'C', 'D'] as $label)
+                        @foreach(['A', 'B', 'C', 'D', 'E'] as $label)
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">
                                     Pilihan {{ $label }}
@@ -146,7 +146,7 @@
                             class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800
                             focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
                             <option value="">Pilih kunci jawaban</option>
-                            @foreach(['A', 'B', 'C', 'D'] as $label)
+                            @foreach(['A', 'B', 'C', 'D', 'E'] as $label)
                                 <option value="{{ $label }}" {{ old('correct_answer') === $label ? 'selected' : '' }}>
                                     {{ $label }}
                                 </option>
@@ -251,6 +251,7 @@
                                     data-option-b="{{ e(optional($question->options->firstWhere('label', 'B'))->option_text) }}"
                                     data-option-c="{{ e(optional($question->options->firstWhere('label', 'C'))->option_text) }}"
                                     data-option-d="{{ e(optional($question->options->firstWhere('label', 'D'))->option_text) }}"
+                                    data-option-e="{{ e(optional($question->options->firstWhere('label', 'E'))->option_text) }}"
                                     data-correct="{{ $question->options->firstWhere('is_correct', true)?->label }}">
                                     <i class="fa-solid fa-pen-to-square group-hover:scale-110 transition-transform"></i>
                                     <span class="text-sm font-bold">Edit</span>
@@ -360,7 +361,7 @@
                     <img id="edit_academic_image_preview" class="hidden mt-3 w-full max-w-md rounded-2xl border border-slate-200 bg-slate-50 object-contain">
                 </div>
                 <div class="grid md:grid-cols-2 gap-4">
-                    @foreach(['A', 'B', 'C', 'D'] as $label)
+                    @foreach(['A', 'B', 'C', 'D', 'E'] as $label)
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Pilihan {{ $label }}</label>
                             <input name="options[{{ $label }}]" id="edit_academic_option_{{ strtolower($label) }}"
@@ -372,7 +373,7 @@
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Kunci Jawaban</label>
                     <select name="correct_answer" id="edit_academic_correct_answer"
                         class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800">
-                        @foreach(['A', 'B', 'C', 'D'] as $label)
+                        @foreach(['A', 'B', 'C', 'D', 'E'] as $label)
                             <option value="{{ $label }}">{{ $label }}</option>
                         @endforeach
                     </select>
@@ -407,6 +408,7 @@
                 $('#edit_academic_option_b').val($(this).data('option-b') || '');
                 $('#edit_academic_option_c').val($(this).data('option-c') || '');
                 $('#edit_academic_option_d').val($(this).data('option-d') || '');
+                $('#edit_academic_option_e').val($(this).data('option-e') || '');
                 $('#edit_academic_correct_answer').val($(this).data('correct') || 'A');
                 $('#edit_academic_is_active').prop('checked', Number($(this).data('active')) === 1);
 

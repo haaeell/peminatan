@@ -36,6 +36,7 @@ class AcademicQuestionsImport implements SkipsEmptyRows, ToCollection, WithHeadi
                     'B' => trim((string) ($row['option_b'] ?? '')),
                     'C' => trim((string) ($row['option_c'] ?? '')),
                     'D' => trim((string) ($row['option_d'] ?? '')),
+                    'E' => trim((string) ($row['option_e'] ?? '')),
                 ];
 
                 if ($questionText === '') {
@@ -48,8 +49,8 @@ class AcademicQuestionsImport implements SkipsEmptyRows, ToCollection, WithHeadi
                     }
                 }
 
-                if (!in_array($correctAnswer, ['A', 'B', 'C', 'D'], true)) {
-                    $this->rowError($index, 'Kolom correct_answer harus berisi A, B, C, atau D.');
+                if (!in_array($correctAnswer, ['A', 'B', 'C', 'D', 'E'], true)) {
+                    $this->rowError($index, 'Kolom correct_answer harus berisi A, B, C, D, atau E.');
                 }
 
                 $question = AcademicQuestion::create([

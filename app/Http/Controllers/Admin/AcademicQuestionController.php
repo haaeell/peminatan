@@ -40,7 +40,8 @@ class AcademicQuestionController extends Controller
             'options.B' => ['required', 'string'],
             'options.C' => ['required', 'string'],
             'options.D' => ['required', 'string'],
-            'correct_answer' => ['required', 'in:A,B,C,D'],
+            'options.E' => ['required', 'string'],
+            'correct_answer' => ['required', 'in:A,B,C,D,E'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
@@ -76,7 +77,8 @@ class AcademicQuestionController extends Controller
             'options.B' => ['required', 'string'],
             'options.C' => ['required', 'string'],
             'options.D' => ['required', 'string'],
-            'correct_answer' => ['required', 'in:A,B,C,D'],
+            'options.E' => ['required', 'string'],
+            'correct_answer' => ['required', 'in:A,B,C,D,E'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 

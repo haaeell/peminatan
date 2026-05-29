@@ -28,6 +28,7 @@ class AcademicQuestionsExport implements FromCollection, ShouldAutoSize, WithHea
             'option_b',
             'option_c',
             'option_d',
+            'option_e',
             'correct_answer',
             'is_active',
         ];
@@ -44,6 +45,7 @@ class AcademicQuestionsExport implements FromCollection, ShouldAutoSize, WithHea
             $options->get('B')?->option_text,
             $options->get('C')?->option_text,
             $options->get('D')?->option_text,
+            $options->get('E')?->option_text,
             $question->options->firstWhere('is_correct', true)?->label,
             $question->is_active ? 1 : 0,
         ];

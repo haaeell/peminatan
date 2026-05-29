@@ -19,6 +19,7 @@ class AcademicQuestionsTemplateExport implements FromArray, ShouldAutoSize, With
             'option_b',
             'option_c',
             'option_d',
+            'option_e',
             'correct_answer',
             'is_active',
         ];
@@ -34,6 +35,7 @@ class AcademicQuestionsTemplateExport implements FromArray, ShouldAutoSize, With
                 'Pilihan B',
                 'Pilihan C',
                 'Pilihan D',
+                'Pilihan E',
                 'A',
                 '1',
             ],
