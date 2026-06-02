@@ -6,7 +6,6 @@ use App\Models\Student;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -90,7 +89,7 @@ class StudentsImport implements ToCollection, WithChunkReading, WithHeadingRow, 
                 $userRows[] = [
                     'name' => $row['name'],
                     'nisn' => $row['nisn'],
-                    'password' => Hash::make($row['password']),
+                    'password' => $row['password'],
                     'role' => 'siswa',
                     'is_active' => $row['is_active'],
                     'created_at' => $now,
@@ -190,4 +189,5 @@ class StudentsImport implements ToCollection, WithChunkReading, WithHeadingRow, 
 
         return null;
     }
+
 }

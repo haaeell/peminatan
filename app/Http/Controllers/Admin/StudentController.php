@@ -12,7 +12,6 @@ use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
@@ -121,7 +120,7 @@ class StudentController extends Controller
             $user = User::create([
                 'name' => $validated['name'],
                 'nisn' => $validated['nisn'],
-                'password' => Hash::make($validated['password']),
+                'password' => $validated['password'],
                 'role' => 'siswa',
                 'is_active' => $request->boolean('is_active'),
             ]);
@@ -173,7 +172,7 @@ class StudentController extends Controller
             ];
 
             if (!empty($validated['password'])) {
-                $userData['password'] = Hash::make($validated['password']);
+                $userData['password'] = $validated['password'];
             }
 
             $student->user->update($userData);

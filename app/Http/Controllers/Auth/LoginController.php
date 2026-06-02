@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -23,21 +25,6 @@ class LoginController extends Controller
         return 'login';
     }
 
-    protected function credentials(Request $request): array
-    {
-        $login = $request->input('login');
-
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL)
-            ? 'email'
-            : 'nisn';
-
-        return [
-            $field => $login,
-            'password' => $request->input('password'),
-            'is_active' => true,
-        ];
-    }
-
     protected function validateLogin(Request $request): void
     {
         $request->validate([
@@ -47,5 +34,29 @@ class LoginController extends Controller
             'login.required' => 'Email atau NISN wajib diisi.',
             'password.required' => 'Password wajib diisi.',
         ]);
+    }
+
+    protected function attemptLogin(Request $request): bool
+    {
+        $login = $request->input('login');
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'nisn';
+        $user = User::where($field, $login)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$user) {
+            return false;
+        }
+
+        $password = (string) $request->input('password');
+        $storedPassword = (string) $user->password;
+
+        if (!hash_equals($storedPassword, $password) && !Hash::check($password, $storedPassword)) {
+            return false;
+        }
+
+        $this->guard()->login($user, $request->boolean('remember'));
+
+        return true;
     }
 }
