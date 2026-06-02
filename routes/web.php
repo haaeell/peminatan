@@ -128,6 +128,9 @@ Route::middleware(['auth', 'role:admin'])
         | SOAL PSIKOLOGI
         |--------------------------------------------------------------------------
         */
+        Route::delete('/psychology-questions/destroy-all', [PsychologyQuestionController::class, 'destroyAll'])
+            ->name('psychology-questions.destroy-all');
+
         Route::resource('/psychology-questions', PsychologyQuestionController::class);
 
         Route::post('/psychology-questions/import', [PsychologyQuestionController::class, 'import'])

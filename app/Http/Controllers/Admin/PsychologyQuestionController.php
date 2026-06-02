@@ -16,6 +16,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class PsychologyQuestionController extends Controller
 {
+    private const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E'];
+
     public function index()
     {
         $perPage = request('per_page', 10);
@@ -29,26 +31,18 @@ class PsychologyQuestionController extends Controller
             : $query->paginate((int) $perPage)->withQueryString();
 
         $packages = Package::where('is_active', true)->get();
+        $optionLabels = self::OPTION_LABELS;
 
         return view('admin.psychology-questions.index', compact(
             'questions',
-            'packages'
+            'packages',
+            'optionLabels'
         ));
     }
 
     public function store(Request $request, ActivityLogService $logger)
     {
-        $validated = $request->validate([
-            'question' => ['required', 'string'],
-            'image' => ['nullable', 'image', 'max:2048'],
-            'options' => ['required', 'array'],
-            'options.A.text' => ['required', 'string'],
-            'options.B.text' => ['required', 'string'],
-            'options.C.text' => ['required', 'string'],
-            'options.D.text' => ['required', 'string'],
-            'options.*.weights' => ['nullable', 'array'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validate($this->rules());
 
         DB::transaction(function () use ($validated, $request, $logger) {
             $question = PsychologyQuestion::create([
@@ -84,17 +78,7 @@ class PsychologyQuestionController extends Controller
 
     public function update(Request $request, PsychologyQuestion $psychologyQuestion, ActivityLogService $logger)
     {
-        $validated = $request->validate([
-            'question' => ['required', 'string'],
-            'image' => ['nullable', 'image', 'max:2048'],
-            'options' => ['required', 'array'],
-            'options.A.text' => ['required', 'string'],
-            'options.B.text' => ['required', 'string'],
-            'options.C.text' => ['required', 'string'],
-            'options.D.text' => ['required', 'string'],
-            'options.*.weights' => ['nullable', 'array'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validate($this->rules());
 
         DB::transaction(function () use ($validated, $request, $psychologyQuestion, $logger) {
             $psychologyQuestion->update([
@@ -125,6 +109,23 @@ class PsychologyQuestionController extends Controller
         return back()->with('success', 'Soal psikotes berhasil diperbarui.');
     }
 
+    private function rules(): array
+    {
+        $rules = [
+            'question' => ['required', 'string'],
+            'image' => ['nullable', 'image', 'max:2048'],
+            'options' => ['required', 'array'],
+            'options.*.weights' => ['nullable', 'array'],
+            'is_active' => ['nullable', 'boolean'],
+        ];
+
+        foreach (self::OPTION_LABELS as $label) {
+            $rules['options.' . $label . '.text'] = ['required', 'string'];
+        }
+
+        return $rules;
+    }
+
     public function destroy(PsychologyQuestion $psychologyQuestion, ActivityLogService $logger)
     {
         $logger->log('psychology_question', 'delete', $psychologyQuestion);
@@ -144,6 +145,19 @@ class PsychologyQuestionController extends Controller
         PsychologyQuestion::whereIn('id', $validated['ids'])->delete();
 
         return back()->with('success', 'Soal psikotes terpilih berhasil dihapus.');
+    }
+
+    public function destroyAll()
+    {
+        PsychologyQuestion::query()
+            ->select('id')
+            ->chunkById(100, function ($questions) {
+                foreach ($questions as $question) {
+                    $question->delete();
+                }
+            });
+
+        return back()->with('success', 'Semua soal psikotes berhasil dihapus.');
     }
 
     public function downloadTemplate()

@@ -123,7 +123,7 @@
                     </div>
 
                     <div class="space-y-4">
-                        @foreach(['A', 'B', 'C', 'D'] as $label)
+                        @foreach($optionLabels as $label)
                             <div class="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
                                 <div class="flex items-center gap-3 mb-3">
                                     <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-extrabold">
@@ -192,15 +192,31 @@
                     <p class="text-sm text-slate-500">Preview pilihan jawaban dan bobot tiap jurusan.</p>
                 </div>
 
-                <form method="GET" class="flex items-center gap-3">
-                    <label class="text-sm font-semibold text-slate-500">Tampilkan</label>
-                    <select name="per_page" onchange="this.form.submit()"
-                        class="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800">
-                        @foreach(['10' => '10', '25' => '25', '50' => '50', 'all' => 'Semua'] as $value => $label)
-                            <option value="{{ $value }}" {{ request('per_page', '10') == $value ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </form>
+                <div class="flex flex-wrap items-center gap-3">
+                    <form method="GET" class="flex items-center gap-3">
+                        <label class="text-sm font-semibold text-slate-500">Tampilkan</label>
+                        <select name="per_page" onchange="this.form.submit()"
+                            class="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800">
+                            @foreach(['10' => '10', '25' => '25', '50' => '50', 'all' => 'Semua'] as $value => $label)
+                                <option value="{{ $value }}" {{ request('per_page', '10') == $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+
+                    <form id="deleteAllPsychologyQuestionsForm" method="POST"
+                        action="{{ route('admin.psychology-questions.destroy-all') }}">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button"
+                            onclick="confirmDelete('deleteAllPsychologyQuestionsForm')"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl
+                            bg-blue-600 text-white hover:bg-blue-700
+                            shadow-sm hover:shadow-lg hover:shadow-blue-200 transition-all duration-300">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span class="text-sm font-bold">Hapus Semua</span>
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <div class="space-y-4">
@@ -259,7 +275,7 @@
                                     data-question="{{ e($question->question) }}"
                                     data-image="{{ $question->image_path ? asset('storage/' . $question->image_path) : '' }}"
                                     data-active="{{ $question->is_active ? 1 : 0 }}"
-                                    @foreach(['A', 'B', 'C', 'D'] as $label)
+                                    @foreach($optionLabels as $label)
                                         data-option-{{ strtolower($label) }}="{{ e(optional($question->options->firstWhere('label', $label))->option_text) }}"
                                         @foreach($packages as $package)
                                             data-weight-{{ strtolower($label) }}-{{ $package->id }}="{{ optional(optional($question->options->firstWhere('label', $label))->weights->firstWhere('package_id', $package->id))->weight ?? 0 }}"
@@ -371,7 +387,7 @@
                     <img id="edit_psychology_image_preview" class="hidden mt-3 w-full max-w-md rounded-2xl border border-slate-200 bg-slate-50 object-contain">
                 </div>
                 <div class="space-y-4">
-                    @foreach(['A', 'B', 'C', 'D'] as $label)
+                    @foreach($optionLabels as $label)
                         <div class="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
                             <div class="font-extrabold text-slate-900 mb-3">Pilihan {{ $label }}</div>
                             <input name="options[{{ $label }}][text]" id="edit_psychology_option_{{ strtolower($label) }}"
@@ -417,7 +433,7 @@
                 $('#edit_psychology_question').val($(this).data('question') || '');
                 $('#edit_psychology_is_active').prop('checked', Number($(this).data('active')) === 1);
 
-                ['a', 'b', 'c', 'd'].forEach(function (label) {
+                @json(collect($optionLabels)->map(fn ($label) => strtolower($label))->values()).forEach(function (label) {
                     $('#edit_psychology_option_' + label).val($(`.editPsychologyQuestionBtn[data-id="${id}"]`).data('option-' + label) || '');
                     @foreach($packages as $package)
                         $('#edit_psychology_weight_' + label + '_{{ $package->id }}').val($(`.editPsychologyQuestionBtn[data-id="${id}"]`).data('weight-' + label + '-{{ $package->id }}') ?? 0);

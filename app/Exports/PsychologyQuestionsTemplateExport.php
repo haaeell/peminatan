@@ -44,6 +44,10 @@ class PsychologyQuestionsTemplateExport implements FromArray, ShouldAutoSize, Wi
                 ['PSI-001', 'Saya lebih suka aktivitas yang melibatkan eksperimen.', '', 'D', 'Tidak sesuai dengan diri saya', '1'],
                 $baseWeights
             ),
+            array_merge(
+                ['PSI-001', 'Saya lebih suka aktivitas yang melibatkan eksperimen.', '', 'E', 'Sangat tidak sesuai dengan diri saya', '1'],
+                $baseWeights
+            ),
         ];
     }
 

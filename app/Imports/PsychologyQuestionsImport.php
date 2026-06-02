@@ -14,6 +14,8 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class PsychologyQuestionsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
 {
+    private const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E'];
+
     public function __construct(private readonly QuestionImageService $imageService)
     {
     }
@@ -52,8 +54,8 @@ class PsychologyQuestionsImport implements SkipsEmptyRows, ToCollection, WithHea
 
                 sort($labels);
 
-                if ($labels !== ['A', 'B', 'C', 'D']) {
-                    $this->groupError($groupKey, 'Setiap soal harus memiliki option_label A, B, C, dan D masing-masing satu kali.');
+                if ($labels !== self::OPTION_LABELS) {
+                    $this->groupError($groupKey, 'Setiap soal harus memiliki option_label A, B, C, D, dan E masing-masing satu kali.');
                 }
 
                 $question = PsychologyQuestion::create([
