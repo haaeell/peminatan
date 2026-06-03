@@ -4,19 +4,27 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\Student;
+use App\Services\ExamFinalizationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ExamMonitoringController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, ExamFinalizationService $examFinalizationService)
     {
         $academicDuration = Setting::getInt('academic_duration_minutes', 60);
         $psychologyDuration = Setting::getInt('psychology_duration_minutes', 45);
         $violationLimit = Setting::getInt('cbt_auto_submit_violation_limit', 3);
         $now = now();
         $perPage = min(max((int) $request->integer('per_page', 30), 10), 100);
+        $search = trim((string) $request->input('q', ''));
+        $examFilter = $request->input('exam');
+        $examFilter = in_array($examFilter, ['academic', 'psychology'], true) ? $examFilter : null;
+
+        $this->finalizeExpiredSessions($examFinalizationService, $academicDuration, $psychologyDuration, $now);
+
         $activeExamCase = "
             CASE
                 WHEN s.status = 'psychology_test'
@@ -44,6 +52,18 @@ class ExamMonitoringController extends Controller
                             ->whereNull('sts.psychology_submitted_at');
                     });
             });
+
+        if ($search !== '') {
+            $activeSessionsQuery->where(function ($query) use ($search) {
+                $query->where('s.name', 'like', "%{$search}%")
+                    ->orWhere('s.nisn', 'like', "%{$search}%")
+                    ->orWhere('s.origin_class', 'like', "%{$search}%");
+            });
+        }
+
+        if ($examFilter) {
+            $activeSessionsQuery->whereRaw("({$activeExamCase}) = ?", [$examFilter]);
+        }
 
         $summaryRow = DB::query()
             ->fromSub(
@@ -144,7 +164,64 @@ class ExamMonitoringController extends Controller
 
         $recentSubmissions = $this->recentSubmissions();
 
-        return view('admin.exam-monitoring.index', compact('students', 'summary', 'recentSubmissions'));
+        return view('admin.exam-monitoring.index', compact('students', 'summary', 'recentSubmissions', 'search', 'examFilter'));
+    }
+
+    private function finalizeExpiredSessions(
+        ExamFinalizationService $examFinalizationService,
+        int $academicDuration,
+        int $psychologyDuration,
+        Carbon $now
+    ): void {
+        $this->expiredAcademicSessions($academicDuration, $now)
+            ->each(function ($session) use ($examFinalizationService, $academicDuration) {
+                $student = Student::find($session->student_id);
+
+                if ($student) {
+                    $examFinalizationService->finalizeAcademic(
+                        $student,
+                        (int) $session->test_session_id,
+                        'timeout',
+                        $academicDuration * 60
+                    );
+                }
+            });
+
+        $this->expiredPsychologySessions($psychologyDuration, $now)
+            ->each(function ($session) use ($examFinalizationService, $psychologyDuration) {
+                $student = Student::find($session->student_id);
+
+                if ($student) {
+                    $examFinalizationService->finalizePsychology(
+                        $student,
+                        (int) $session->test_session_id,
+                        'timeout',
+                        $psychologyDuration * 60
+                    );
+                }
+            });
+    }
+
+    private function expiredAcademicSessions(int $durationMinutes, Carbon $now)
+    {
+        return DB::table('student_test_sessions')
+            ->select(['student_id', 'test_session_id'])
+            ->whereNotNull('academic_started_at')
+            ->whereNull('academic_submitted_at')
+            ->where('academic_started_at', '<=', $now->copy()->subMinutes($durationMinutes))
+            ->limit(100)
+            ->get();
+    }
+
+    private function expiredPsychologySessions(int $durationMinutes, Carbon $now)
+    {
+        return DB::table('student_test_sessions')
+            ->select(['student_id', 'test_session_id'])
+            ->whereNotNull('psychology_started_at')
+            ->whereNull('psychology_submitted_at')
+            ->where('psychology_started_at', '<=', $now->copy()->subMinutes($durationMinutes))
+            ->limit(100)
+            ->get();
     }
 
     private function recentSubmissions()

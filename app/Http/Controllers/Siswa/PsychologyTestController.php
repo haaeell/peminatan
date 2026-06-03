@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PsychologyQuestion;
 use App\Models\Setting;
 use App\Models\StudentPsychologyAnswer;
-use App\Services\PsychologyScoringService;
+use App\Services\ExamFinalizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +24,7 @@ class PsychologyTestController extends Controller
         $remainingSeconds = $this->calculateRemainingSeconds($sessionState->psychology_started_at, $durationMinutes);
 
         if ($remainingSeconds <= 0) {
-            return $this->finalizePsychology($student, $sessionState->test_session_id, app(PsychologyScoringService::class), true);
+            return $this->finalizePsychology($student, $sessionState->test_session_id, app(ExamFinalizationService::class), true);
         }
 
         $questions = PsychologyQuestion::activeForTest();
@@ -82,7 +82,7 @@ class PsychologyTestController extends Controller
         ]);
     }
 
-    public function submit(Request $request, PsychologyScoringService $scoringService)
+    public function submit(Request $request, ExamFinalizationService $examFinalizationService)
     {
         $student = auth()->user()->student;
         abort_if($student->status !== 'psychology_test', 403, 'Tes psikologi belum tersedia untuk status Anda.');
@@ -92,7 +92,7 @@ class PsychologyTestController extends Controller
         return $this->finalizePsychology(
             $student,
             $sessionState->test_session_id,
-            $scoringService,
+            $examFinalizationService,
             false,
             $request->input('submit_type', 'manual')
         );
@@ -129,37 +129,12 @@ class PsychologyTestController extends Controller
         return max(0, ($durationMinutes * 60) - Carbon::parse($startedAt)->diffInSeconds(now()));
     }
 
-    private function finalizePsychology($student, int $sessionId, PsychologyScoringService $scoringService, bool $expired = false, string $submitType = 'manual')
+    private function finalizePsychology($student, int $sessionId, ExamFinalizationService $examFinalizationService, bool $expired = false, string $submitType = 'manual')
     {
         $submitType = $expired ? 'timeout' : $this->normalizeSubmitType($submitType);
+        $durationLimitSeconds = $expired ? Setting::getInt('psychology_duration_minutes', 45) * 60 : null;
 
-        DB::transaction(function () use ($student, $sessionId, $scoringService, $submitType) {
-            $scoringService->calculate($student);
-
-            $student->update(['status' => 'completed']);
-
-            $sessionState = DB::table('student_test_sessions')
-                ->where('student_id', $student->id)
-                ->where('test_session_id', $sessionId)
-                ->first();
-
-            $submittedAt = now();
-            $durationSeconds = $sessionState?->psychology_started_at
-                ? max(0, Carbon::parse($sessionState->psychology_started_at)->diffInSeconds($submittedAt))
-                : null;
-
-            DB::table('student_test_sessions')
-                ->where('student_id', $student->id)
-                ->where('test_session_id', $sessionId)
-                ->update([
-                    'psychology_submitted_at' => $submittedAt,
-                    'psychology_duration_seconds' => $durationSeconds,
-                    'psychology_submit_type' => $submitType,
-                    'status' => 'finished',
-                    'finished_at' => $submittedAt,
-                    'updated_at' => $submittedAt,
-                ]);
-        });
+        $examFinalizationService->finalizePsychology($student, $sessionId, $submitType, $durationLimitSeconds);
 
         if ($expired) {
             return redirect()

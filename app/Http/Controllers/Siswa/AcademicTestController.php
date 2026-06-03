@@ -7,7 +7,7 @@ use App\Models\AcademicQuestion;
 use App\Models\AcademicQuestionOption;
 use App\Models\Setting;
 use App\Models\StudentAcademicAnswer;
-use App\Models\TestResult;
+use App\Services\ExamFinalizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +25,7 @@ class AcademicTestController extends Controller
         $remainingSeconds = $this->calculateRemainingSeconds($sessionState->academic_started_at, $durationMinutes);
 
         if ($remainingSeconds <= 0) {
-            return $this->finalizeAcademic($student, $sessionState->test_session_id, true);
+            return $this->finalizeAcademic($student, $sessionState->test_session_id, app(ExamFinalizationService::class), true);
         }
 
         $questions = AcademicQuestion::activeForTest();
@@ -88,7 +88,7 @@ class AcademicTestController extends Controller
         ]);
     }
 
-    public function submit(Request $request)
+    public function submit(Request $request, ExamFinalizationService $examFinalizationService)
     {
         $student = auth()->user()->student;
 
@@ -97,6 +97,7 @@ class AcademicTestController extends Controller
         return $this->finalizeAcademic(
             $student,
             $sessionState->test_session_id,
+            $examFinalizationService,
             false,
             $request->input('submit_type', 'manual')
         );
@@ -133,46 +134,12 @@ class AcademicTestController extends Controller
         return max(0, ($durationMinutes * 60) - Carbon::parse($startedAt)->diffInSeconds(now()));
     }
 
-    private function finalizeAcademic($student, int $sessionId, bool $expired = false, string $submitType = 'manual')
+    private function finalizeAcademic($student, int $sessionId, ExamFinalizationService $examFinalizationService, bool $expired = false, string $submitType = 'manual')
     {
         $submitType = $expired ? 'timeout' : $this->normalizeSubmitType($submitType);
+        $durationLimitSeconds = $expired ? Setting::getInt('academic_duration_minutes', 60) * 60 : null;
 
-        DB::transaction(function () use ($student, $sessionId, $submitType) {
-            $total = AcademicQuestion::activeForTest()->count();
-
-            $correct = $student->academicAnswers()
-                ->where('is_correct', true)
-                ->count();
-
-            $score = $total > 0 ? round(($correct / $total) * 100, 2) : 0;
-
-            TestResult::updateOrCreate(
-                ['student_id' => $student->id],
-                ['academic_score' => $score]
-            );
-
-            $sessionState = DB::table('student_test_sessions')
-                ->where('student_id', $student->id)
-                ->where('test_session_id', $sessionId)
-                ->first();
-
-            $submittedAt = now();
-            $durationSeconds = $sessionState?->academic_started_at
-                ? max(0, Carbon::parse($sessionState->academic_started_at)->diffInSeconds($submittedAt))
-                : null;
-
-            DB::table('student_test_sessions')
-                ->where('student_id', $student->id)
-                ->where('test_session_id', $sessionId)
-                ->update([
-                    'academic_submitted_at' => $submittedAt,
-                    'academic_duration_seconds' => $durationSeconds,
-                    'academic_submit_type' => $submitType,
-                    'updated_at' => $submittedAt,
-                ]);
-
-            $student->update(['status' => 'psychology_test']);
-        });
+        $examFinalizationService->finalizeAcademic($student, $sessionId, $submitType, $durationLimitSeconds);
 
         if ($expired) {
             return redirect()
