@@ -13,12 +13,16 @@
             this.storageKey = `backup_${this.examType}`;
             this.lastViolationAt = 0;
             this.violationCooldownMs = 1500;
+            this.focusMonitor = null;
+            this.wasVisible = !document.hidden;
+            this.wasFocused = document.hasFocus();
         }
 
         init() {
             this.forceFullscreen();
             this.blockInput();
             this.listenViolation();
+            this.monitorVisibilityFallback();
             this.restoreBackup();
             this.watchConnection();
         }
@@ -71,6 +75,37 @@
                     this.forceFullscreen();
                 }
             });
+        }
+
+        monitorVisibilityFallback() {
+            if (this.focusMonitor) {
+                clearInterval(this.focusMonitor);
+            }
+
+            this.focusMonitor = setInterval(() => {
+                if (this.isSubmitting) {
+                    return;
+                }
+
+                const isHidden = document.hidden || document.visibilityState === 'hidden';
+                const isFocused = document.hasFocus();
+
+                if (isHidden && !this.wasVisible) {
+                    return;
+                }
+
+                if (isHidden) {
+                    this.report('visibility_hidden');
+                }
+
+                this.wasVisible = !isHidden;
+
+                if (!isFocused && this.wasFocused) {
+                    this.report('window_blur');
+                }
+
+                this.wasFocused = isFocused;
+            }, 500);
         }
 
         report(action) {
@@ -175,6 +210,11 @@
 
         submitExam() {
             this.isSubmitting = true;
+
+            if (this.focusMonitor) {
+                clearInterval(this.focusMonitor);
+                this.focusMonitor = null;
+            }
 
             $.post(this.submitUrl, {
                 _token: this.csrf
