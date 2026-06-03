@@ -269,7 +269,20 @@ class StudentController extends Controller
         }
 
         if ($import->getSkippedCount() > 0) {
-            $message .= ", {$import->getSkippedCount()} baris dilewati karena kosong, duplikat, atau formatnya tidak valid.";
+            $skipSummary = collect($import->getSkipSummary())
+                ->filter(fn(int $count) => $count > 0)
+                ->map(function (int $count, string $reason) {
+                    $labels = [
+                        'empty' => 'kosong',
+                        'duplicate' => 'duplikat',
+                        'invalid' => 'format tidak valid',
+                    ];
+
+                    return "{$count} {$labels[$reason]}";
+                })
+                ->implode(', ');
+
+            $message .= ", {$import->getSkippedCount()} baris dilewati ({$skipSummary}).";
         } else {
             $message .= '.';
         }

@@ -16,7 +16,11 @@ class StudentsImport implements ToCollection, WithChunkReading, WithHeadingRow, 
 {
     private int $importedCount = 0;
 
-    private int $skippedCount = 0;
+    private int $emptyCount = 0;
+
+    private int $invalidCount = 0;
+
+    private int $duplicateCount = 0;
 
     private array $seenNisns = [];
 
@@ -27,14 +31,15 @@ class StudentsImport implements ToCollection, WithChunkReading, WithHeadingRow, 
         $cleanRows = $rows
             ->map(function ($row) {
                 $row = $row->toArray();
-                $isActive = $this->valueFromRow($row, ['is_active', 'status', 'aktif']);
+                $isActive = $this->valueFromRow($row, ['is_active', 'status_akun', 'status', 'aktif']);
 
                 return [
-                    'name' => trim((string) $this->valueFromRow($row, ['name', 'nama'])),
-                    'nisn' => trim((string) $this->valueFromRow($row, ['nisn'])),
-                    'nis' => $this->normalizeNullableString($this->valueFromRow($row, ['nis'])),
-                    'origin_class' => strtoupper(trim((string) $this->valueFromRow($row, ['origin_class', 'origin class', 'kelas_asal', 'kelas asal', 'kelas']))),
-                    'password' => trim((string) ($row['password'] ?? '')) ?: '12345678',
+                    '_raw_has_value' => $this->rowHasValue($row),
+                    'name' => trim((string) $this->valueFromRow($row, ['name', 'nama', 'nama_siswa', 'nama_lengkap'])),
+                    'nisn' => trim((string) $this->valueFromRow($row, ['nisn', 'nomor_nisn'])),
+                    'nis' => $this->normalizeNullableString($this->valueFromRow($row, ['nis', 'nomor_induk', 'nomor_induk_siswa'])),
+                    'origin_class' => strtoupper(trim((string) $this->valueFromRow($row, ['origin_class', 'kelas_asal', 'kelas', 'rombel']))),
+                    'password' => trim((string) $this->valueFromRow($row, ['password', 'kata_sandi', 'sandi'])) ?: '12345678',
                     'is_active' => $isActive === null || trim((string) $isActive) === ''
                         ? true
                         : $this->normalizeIsActive($isActive),
@@ -42,7 +47,7 @@ class StudentsImport implements ToCollection, WithChunkReading, WithHeadingRow, 
             })
             ->filter(function (array $row) {
                 if ($this->isEmptyStudentRow($row)) {
-                    $this->skippedCount++;
+                    $this->emptyCount++;
 
                     return false;
                 }
@@ -64,12 +69,12 @@ class StudentsImport implements ToCollection, WithChunkReading, WithHeadingRow, 
 
         foreach ($cleanRows as $row) {
             if (!$this->isRowValid($row)) {
-                $this->skippedCount++;
+                $this->invalidCount++;
                 continue;
             }
 
             if (isset($blockedNisns[$row['nisn']]) || isset($this->seenNisns[$row['nisn']])) {
-                $this->skippedCount++;
+                $this->duplicateCount++;
                 continue;
             }
 
@@ -140,7 +145,16 @@ class StudentsImport implements ToCollection, WithChunkReading, WithHeadingRow, 
 
     public function getSkippedCount(): int
     {
-        return $this->skippedCount;
+        return $this->emptyCount + $this->invalidCount + $this->duplicateCount;
+    }
+
+    public function getSkipSummary(): array
+    {
+        return [
+            'empty' => $this->emptyCount,
+            'duplicate' => $this->duplicateCount,
+            'invalid' => $this->invalidCount,
+        ];
     }
 
     private function normalizeIsActive(mixed $value): bool
@@ -166,7 +180,8 @@ class StudentsImport implements ToCollection, WithChunkReading, WithHeadingRow, 
 
     private function isEmptyStudentRow(array $row): bool
     {
-        return $row['name'] === ''
+        return !$row['_raw_has_value']
+            && $row['name'] === ''
             && $row['nisn'] === ''
             && ($row['nis'] === null || $row['nis'] === '')
             && $row['origin_class'] === '';
@@ -177,6 +192,17 @@ class StudentsImport implements ToCollection, WithChunkReading, WithHeadingRow, 
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function rowHasValue(array $row): bool
+    {
+        foreach ($row as $value) {
+            if (trim((string) $value) !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function valueFromRow(array $row, array $keys): mixed
