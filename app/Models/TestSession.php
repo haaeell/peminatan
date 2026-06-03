@@ -53,6 +53,40 @@ class TestSession extends Model
         );
     }
 
+    public static function upcomingForOriginClass(string $originClass): ?self
+    {
+        $active = static::activeForOriginClass($originClass);
+
+        if ($active) {
+            return $active;
+        }
+
+        $bucket = intdiv(now()->timestamp, 15);
+
+        return Cache::store('file')->remember(
+            "test_sessions.upcoming.{$originClass}.{$bucket}",
+            now()->addSeconds(15),
+            function () use ($originClass) {
+                return static::query()
+                    ->select(['id', 'name', 'test_date', 'start_time', 'end_time', 'test_type', 'is_active'])
+                    ->where('is_active', true)
+                    ->where(function ($q) {
+                        $q->where('test_date', '>', today())
+                            ->orWhere(function ($qq) {
+                                $qq->where('test_date', today())
+                                    ->where('start_time', '>', now()->format('H:i:s'));
+                            });
+                    })
+                    ->whereHas('classes', function ($query) use ($originClass) {
+                        $query->where('origin_class', $originClass);
+                    })
+                    ->orderBy('test_date')
+                    ->orderBy('start_time')
+                    ->first();
+            }
+        );
+    }
+
     public function students()
     {
         return $this->belongsToMany(Student::class, 'student_test_sessions')

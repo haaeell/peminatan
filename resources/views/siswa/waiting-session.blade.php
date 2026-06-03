@@ -10,20 +10,30 @@
                     <i class="fa-solid fa-clock text-4xl"></i>
                 </div>
 
-                <h1 class="text-3xl font-extrabold text-slate-900 mb-3">
-                    Menunggu Jadwal Tes
-                </h1>
+                @if($sessionIsActive ?? false)
+                    <h1 class="text-3xl font-extrabold text-slate-900 mb-3">
+                        Sesi Telah Dimulai
+                    </h1>
 
-                <p class="text-slate-500 mb-8">
-                    Kelas asal Anda:
-                    <span class="font-extrabold text-blue-600">{{ $student->origin_class }}</span>
-                </p>
+                    <p class="text-slate-500 mb-8">
+                        Sesi untuk kelas Anda sudah dimulai. Silakan masuk ke sesi sekarang.
+                    </p>
+                @else
+                    <h1 class="text-3xl font-extrabold text-slate-900 mb-3">
+                        Menunggu Jadwal Tes
+                    </h1>
+
+                    <p class="text-slate-500 mb-8">
+                        Kelas asal Anda:
+                        <span class="font-extrabold text-blue-600">{{ $student->origin_class }}</span>
+                    </p>
+                @endif
 
                 <div class="rounded-[28px] border border-blue-100 bg-blue-50 p-5 text-left text-sm text-blue-700 mb-6">
                     <p class="font-bold mb-2">Informasi penting sebelum tes dimulai:</p>
                     <div>1. Silakan cek halaman ini secara berkala sampai sesi untuk kelas Anda dibuka.</div>
                     <div>2. Masuk ke sesi hanya saat jadwal sudah aktif agar proses ujian berjalan lancar.</div>
-                    <div>3. Pastikan perangkat, koneksi internet, dan kamera sudah siap sebelum mulai mengerjakan tes.</div>
+                    <div>3. Pastikan perangkat dan koneksi internet sudah siap sebelum mulai mengerjakan tes.</div>
                 </div>
 
                 @if($session)
@@ -44,6 +54,12 @@
                                 </h2>
                             </div>
                         </div>
+                        @if(!($sessionIsActive ?? false))
+                            <div class="text-sm text-slate-500 mb-4">
+                                Masuk akan tersedia saat sesi dibuka oleh admin. Silakan muat ulang halaman jika perlu.
+                            </div>
+                        @endif
+
 
                         <div class="grid sm:grid-cols-2 gap-4">
                             <div class="bg-white border border-blue-100 rounded-2xl p-4">
@@ -92,11 +108,20 @@
                             : route('siswa.academic.index');
                     @endphp
 
-                    <a href="{{ $sessionEntryRoute }}"
-                        class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-200 transition">
-                        <i class="fa-solid fa-right-to-bracket"></i>
-                        Masuk ke Sesi Tes
-                    </a>
+                    @if($sessionIsActive ?? false)
+                        <a href="{{ $sessionEntryRoute }}"
+                            class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-200 transition">
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                            Masuk ke Sesi Tes
+                        </a>
+                    @else
+                        <button id="enterSessionBtn"
+                            class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 text-white py-4 rounded-2xl font-extrabold shadow-lg shadow-blue-200 opacity-60 cursor-not-allowed"
+                            disabled>
+                            <i class="fa-solid fa-right-to-bracket"></i>
+                            Masuk ke Sesi Tes
+                        </button>
+                    @endif
 
                     <a href="{{ route('siswa.wizard.index') }}"
                         class="inline-flex items-center justify-center gap-2 w-full bg-white hover:bg-blue-50 text-blue-700 border border-blue-100 py-4 rounded-2xl font-extrabold transition">
@@ -104,6 +129,14 @@
                         Kembali ke Wizard
                     </a>
                 </div>
+
+                @php
+                    // No countdown per user preference. Entry remains disabled until session is active.
+                @endphp
+
+                @php
+                    // Countdown and auto-reload removed to avoid simultaneous reload load spikes.
+                @endphp
 
             </div>
         </div>

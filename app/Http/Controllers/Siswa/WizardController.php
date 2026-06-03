@@ -150,9 +150,12 @@ class WizardController extends Controller
             return redirect()->route($this->studentRoute($student));
         }
 
-        $session = TestSession::activeForOriginClass($student->origin_class);
+        $activeSession = TestSession::activeForOriginClass($student->origin_class);
+        $session = TestSession::upcomingForOriginClass($student->origin_class);
 
-        return view('siswa.waiting-session', compact('student', 'session'));
+        $sessionIsActive = $activeSession && $session && $activeSession->id === $session->id;
+
+        return view('siswa.waiting-session', compact('student', 'session', 'sessionIsActive'));
     }
 
     private function studentRoute(Student $student): string
