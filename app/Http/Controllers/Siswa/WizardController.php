@@ -146,7 +146,7 @@ class WizardController extends Controller
     {
         $student = auth()->user()->student;
 
-        if ($student->status !== 'waiting_session') {
+        if (!in_array($student->status, ['waiting_session', 'academic_test', 'psychology_test'], true)) {
             return redirect()->route($this->studentRoute($student));
         }
 
