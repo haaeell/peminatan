@@ -157,6 +157,15 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/class-distribution', [ClassDistributionController::class, 'index'])
             ->name('class-distribution.index');
 
+        Route::post('/class-distribution/classes', [ClassDistributionController::class, 'store'])
+            ->name('class-distribution.classes.store');
+
+        Route::put('/class-distribution/classes/{classGroup}', [ClassDistributionController::class, 'update'])
+            ->name('class-distribution.classes.update');
+
+        Route::delete('/class-distribution/classes/{classGroup}', [ClassDistributionController::class, 'destroy'])
+            ->name('class-distribution.classes.destroy');
+
         Route::post('/class-distribution/run', [ClassDistributionController::class, 'run'])
             ->name('class-distribution.run');
 

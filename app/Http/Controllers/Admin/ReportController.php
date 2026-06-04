@@ -7,12 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Models\AnnouncementResponse;
 use App\Models\ClassStudent;
 use App\Models\Objection;
-use App\Models\Package;
 use App\Models\Setting;
 use App\Models\Student;
 use App\Models\TestResult;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Collection;
 
 class ReportController extends Controller
 {
@@ -53,6 +53,7 @@ class ReportController extends Controller
             'subtitle' => $report['subtitle'],
             'headings' => $report['headings'],
             'rows' => $report['rows'],
+            'groupedRows' => $report['grouped_rows'] ?? null,
             'summaryLines' => $report['summary_lines'],
             'schoolName' => Setting::getSetting('school_name', 'Sekolah Menengah Atas'),
             'appName' => Setting::getSetting('app_name', 'Sistem Pemilihan Jurusan'),
@@ -90,118 +91,122 @@ class ReportController extends Controller
             'packageChoice.firstPackage',
             'packageChoice.secondPackage',
             'classStudent.classGroup',
-        ])->orderBy('name')->get();
+            'result.finalPackage',
+        ])->get();
 
         $headings = [
+            'No',
             'Nama',
             'NISN',
             'NIS',
             'Kelas Asal',
-            'Status',
-            'Akun Aktif',
             'TTL',
             'Jenis Kelamin',
             'No HP',
             'Ayah',
             'Ibu',
             'No HP Ortu',
-            'Pilihan 1',
-            'Pilihan 2',
-            'Rencana Setelah Lulus',
             'Kelas Hasil',
         ];
 
-        $rows = $students->map(function ($student) {
-            $biodata = $student->biodata;
-
-            return [
+        $groupedRows = $this->groupRowsByOriginClass(
+            $students,
+            fn($student) => $student->origin_class,
+            function ($student) {
+                return [
+                    null,
+                    $student->name,
+                    $student->nisn,
+                    $student->nis ?: '-',
+                    $student->origin_class ?: '-',
+                    $student->biodata
+                        ? trim(($student->biodata->birth_place ?: '-') . ', ' . optional($student->biodata->birth_date)->format('d-m-Y'))
+                        : '-',
+                    $student->biodata?->gender ?: '-',
+                    $student->biodata?->phone ?: '-',
+                    $student->biodata?->father_name ?: '-',
+                    $student->biodata?->mother_name ?: '-',
+                    $student->biodata?->parent_phone ?: '-',
+                    $student->classStudent?->classGroup?->name ?: '-',
+                ];
+            },
+            count($headings),
+            fn($student) => [
+                $student->origin_class ?: 'ZZZ',
                 $student->name,
-                $student->nisn,
-                $student->nis ?: '-',
-                $student->origin_class ?: '-',
-                $student->status,
-                $student->user?->is_active ? 'Aktif' : 'Nonaktif',
-                $biodata
-                    ? trim(($biodata->birth_place ?: '-') . ', ' . optional($biodata->birth_date)->format('d-m-Y'))
-                    : '-',
-                $biodata?->gender ?: '-',
-                $biodata?->phone ?: '-',
-                $biodata?->father_name ?: '-',
-                $biodata?->mother_name ?: '-',
-                $biodata?->parent_phone ?: '-',
-                $student->packageChoice?->firstPackage?->name ?: '-',
-                $student->packageChoice?->secondPackage?->name ?: '-',
-                $student->packageChoice?->post_graduation_plan ?: '-',
-                $student->classStudent?->classGroup?->name ?: '-',
-            ];
-        })->all();
+            ]
+        );
 
         return [
             'title' => 'Laporan Data Siswa Lengkap',
             'subtitle' => 'Ringkasan identitas, biodata, pilihan jurusan, dan status siswa.',
             'filename' => 'laporan_data_siswa_lengkap',
             'headings' => $headings,
-            'rows' => $rows,
+            'rows' => $this->flattenGroupedRows($groupedRows),
+            'grouped_rows' => $groupedRows,
             'summary_lines' => [
                 'Total siswa: ' . $students->count(),
-                'Akun aktif: ' . $students->filter(fn ($student) => $student->user?->is_active)->count(),
-                'Sudah memiliki biodata: ' . $students->filter(fn ($student) => $student->biodata)->count(),
             ],
         ];
     }
 
     private function testResultReport(): array
     {
-        $packageMap = Package::withTrashed()->pluck('code', 'id')->all();
-
         $results = TestResult::with([
             'student.packageChoice.firstPackage',
             'student.packageChoice.secondPackage',
             'student.classStudent.classGroup',
+            'student.result.finalPackage',
             'recommendedPackage',
             'finalPackage',
-        ])->orderByDesc('academic_score')->get();
+        ])->get();
 
         $headings = [
+            'No',
             'Nama',
             'NISN',
-            'Kelas Asal',
             'Nilai Akademik',
-            'Skor Psikotes',
-            'Rekomendasi',
-            'Final',
-            'Kelas Hasil',
             'Pilihan 1',
             'Pilihan 2',
+            'Rekomendasi Psikotes',
+            'Jurusan Final',
             'Rencana Setelah Lulus',
         ];
 
-        $rows = $results->map(function ($result) use ($packageMap) {
-            return [
-                $result->student?->name ?: '-',
-                $result->student?->nisn ?: '-',
-                $result->student?->origin_class ?: '-',
-                (string) $result->academic_score,
-                $this->psychologyScoreText($result->psychology_scores, $packageMap),
-                $result->recommendedPackage?->name ?: '-',
-                $result->finalPackage?->name ?: '-',
-                $result->student?->classStudent?->classGroup?->name ?: '-',
-                $result->student?->packageChoice?->firstPackage?->name ?: '-',
-                $result->student?->packageChoice?->secondPackage?->name ?: '-',
-                $result->student?->packageChoice?->post_graduation_plan ?: '-',
-            ];
-        })->all();
+        $groupedRows = $this->groupRowsByOriginClass(
+            $results,
+            fn($result) => $result->student?->origin_class,
+            function ($result) {
+                return [
+                    null,
+                    $result->student?->name ?: '-',
+                    $result->student?->nisn ?: '-',
+                    (string) $result->academic_score,
+                    $result->student?->packageChoice?->firstPackage?->name ?: '-',
+                    $result->student?->packageChoice?->secondPackage?->name ?: '-',
+                    $result->recommendedPackage?->name ?: '-',
+                    $result->finalPackage?->name ?: '-',
+                    $result->student?->packageChoice?->post_graduation_plan ?: '-',
+                ];
+            },
+            count($headings),
+            fn($result) => [
+                $result->student?->origin_class ?: 'ZZZ',
+                $this->packageSortKey($result->recommendedPackage?->name),
+                - ((float) $result->academic_score),
+                $result->student?->name ?: 'ZZZ',
+            ]
+        );
 
         return [
             'title' => 'Laporan Hasil Tes Siswa',
             'subtitle' => 'Nilai akademik, skor psikotes, dan rekomendasi penempatan.',
             'filename' => 'laporan_hasil_tes_siswa',
             'headings' => $headings,
-            'rows' => $rows,
+            'rows' => $this->flattenGroupedRows($groupedRows),
+            'grouped_rows' => $groupedRows,
             'summary_lines' => [
                 'Total hasil tes: ' . $results->count(),
-                'Sudah punya final jurusan: ' . $results->filter(fn ($result) => $result->finalPackage)->count(),
-                'Sudah dibagi kelas: ' . $results->filter(fn ($result) => $result->student?->classStudent)->count(),
             ],
         ];
     }
@@ -212,9 +217,10 @@ class ReportController extends Controller
             'student',
             'classGroup.package',
             'package',
-        ])->orderBy('class_group_id')->get();
+        ])->get();
 
         $headings = [
+            'No',
             'Nama',
             'NISN',
             'Kelas Asal',
@@ -223,23 +229,34 @@ class ReportController extends Controller
             'Jenis Penempatan',
         ];
 
-        $rows = $classStudents->map(function ($item) {
-            return [
-                $item->student?->name ?: '-',
-                $item->student?->nisn ?: '-',
-                $item->student?->origin_class ?: '-',
-                $item->package?->name ?: '-',
-                $item->classGroup?->name ?: '-',
-                $item->is_manual_override ? 'Manual' : 'Otomatis',
-            ];
-        })->all();
+        $groupedRows = $this->groupRowsByOriginClass(
+            $classStudents,
+            fn($item) => $item->student?->origin_class,
+            function ($item) {
+                return [
+                    null,
+                    $item->student?->name ?: '-',
+                    $item->student?->nisn ?: '-',
+                    $item->student?->origin_class ?: '-',
+                    $item->package?->name ?: '-',
+                    $item->classGroup?->name ?: '-',
+                    $item->is_manual_override ? 'Manual' : 'Otomatis',
+                ];
+            },
+            count($headings),
+            fn($item) => [
+                $item->student?->origin_class ?: 'ZZZ',
+                $item->student?->name ?: 'ZZZ',
+            ]
+        );
 
         return [
             'title' => 'Laporan Distribusi Kelas',
             'subtitle' => 'Daftar siswa berdasarkan hasil jurusan dan kelas penempatan.',
             'filename' => 'laporan_distribusi_kelas',
             'headings' => $headings,
-            'rows' => $rows,
+            'rows' => $this->flattenGroupedRows($groupedRows),
+            'grouped_rows' => $groupedRows,
             'summary_lines' => [
                 'Total siswa terdistribusi: ' . $classStudents->count(),
                 'Penempatan otomatis: ' . $classStudents->where('is_manual_override', false)->count(),
@@ -253,16 +270,18 @@ class ReportController extends Controller
         $responses = AnnouncementResponse::with([
             'student',
             'announcement',
-        ])->orderByDesc('responded_at')->get();
+        ])->get();
 
         $objections = Objection::with(['student', 'announcement'])
             ->orderByDesc('created_at')
             ->get()
-            ->keyBy(fn ($objection) => $objection->announcement_id . '-' . $objection->student_id);
+            ->keyBy(fn($objection) => $objection->announcement_id . '-' . $objection->student_id);
 
         $headings = [
+            'No',
             'Nama',
             'NISN',
+            'Kelas Asal',
             'Pengumuman',
             'Tipe',
             'Respons',
@@ -271,33 +290,93 @@ class ReportController extends Controller
             'Alasan Keberatan',
         ];
 
-        $rows = $responses->map(function ($response) use ($objections) {
-            $objection = $objections->get($response->announcement_id . '-' . $response->student_id);
+        $groupedRows = $this->groupRowsByOriginClass(
+            $responses,
+            fn($response) => $response->student?->origin_class,
+            function ($response) use ($objections) {
+                $objection = $objections->get($response->announcement_id . '-' . $response->student_id);
 
-            return [
-                $response->student?->name ?: '-',
-                $response->student?->nisn ?: '-',
-                $response->announcement?->title ?: '-',
-                $response->announcement?->type ?: '-',
-                $response->response,
-                optional($response->responded_at)->format('d-m-Y H:i') ?: '-',
-                $objection?->status ?: '-',
-                $objection?->reason ?: '-',
-            ];
-        })->all();
+                return [
+                    null,
+                    $response->student?->name ?: '-',
+                    $response->student?->nisn ?: '-',
+                    $response->student?->origin_class ?: '-',
+                    $response->announcement?->title ?: '-',
+                    $response->announcement?->type ?: '-',
+                    $response->response,
+                    optional($response->responded_at)->format('d-m-Y H:i') ?: '-',
+                    $objection?->status ?: '-',
+                    $objection?->reason ?: '-',
+                ];
+            },
+            count($headings),
+            fn($response) => [
+                $response->student?->origin_class ?: 'ZZZ',
+                - ((int) optional($response->responded_at)->timestamp),
+                $response->student?->name ?: 'ZZZ',
+            ]
+        );
 
         return [
             'title' => 'Laporan Respons Pengumuman',
             'subtitle' => 'Penerimaan hasil, keberatan siswa, dan status tindak lanjut.',
             'filename' => 'laporan_respons_pengumuman',
             'headings' => $headings,
-            'rows' => $rows,
+            'rows' => $this->flattenGroupedRows($groupedRows),
+            'grouped_rows' => $groupedRows,
             'summary_lines' => [
                 'Total respons: ' . $responses->count(),
                 'Menerima: ' . $responses->where('response', 'accepted')->count(),
                 'Mengajukan keberatan: ' . $responses->where('response', 'objected')->count(),
             ],
         ];
+    }
+
+    private function groupRowsByOriginClass(
+        Collection $items,
+        callable $groupResolver,
+        callable $rowResolver,
+        int $columnCount,
+        ?callable $sortResolver = null
+    ): array {
+        $sorted = $sortResolver
+            ? $items->sortBy($sortResolver)->values()
+            : $items->values();
+
+        $rows = [];
+        foreach (
+            $sorted->groupBy(function ($item) use ($groupResolver) {
+                return trim((string) ($groupResolver($item) ?: '-'));
+            }) as $group => $groupItems
+        ) {
+            $groupRows = $groupItems
+                ->map($rowResolver)
+                ->values()
+                ->all();
+
+            foreach ($groupRows as $index => $row) {
+                $groupRows[$index][0] = $index + 1;
+            }
+
+            $rows[$group] = $groupRows;
+        }
+
+        return $rows;
+    }
+
+    private function flattenGroupedRows(array $groupedRows): array
+    {
+        $rows = [];
+
+        foreach ($groupedRows as $group => $groupRows) {
+            $rows[] = ['__group' => $group];
+
+            foreach ($groupRows as $row) {
+                $rows[] = $row;
+            }
+        }
+
+        return $rows;
     }
 
     private function psychologyScoreText(?array $scores, array $packageMap): string
@@ -307,7 +386,20 @@ class ReportController extends Controller
         }
 
         return collect($scores)
-            ->map(fn ($score, $packageId) => ($packageMap[$packageId] ?? $packageId) . ':' . $score)
+            ->map(fn($score, $packageId) => ($packageMap[$packageId] ?? $packageId) . ':' . $score)
             ->implode(', ');
+    }
+
+    private function packageSortKey(?string $packageName): string
+    {
+        if (!$packageName) {
+            return 'ZZZ';
+        }
+
+        if (preg_match('/kelompok\s+([a-z])/i', $packageName, $matches)) {
+            return 'A' . strtoupper($matches[1]) . '|' . $packageName;
+        }
+
+        return 'Z' . mb_strtoupper($packageName);
     }
 }

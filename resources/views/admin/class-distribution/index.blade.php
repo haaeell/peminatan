@@ -22,6 +22,12 @@
         </div>
 
         <div class="flex flex-wrap gap-3">
+            <button type="button" onclick="openCreateClassModal()"
+                class="inline-flex items-center justify-center gap-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-100 px-5 py-3 rounded-2xl font-extrabold transition">
+                <i class="fa-solid fa-plus"></i>
+                Tambah Kelas
+            </button>
+
             <form id="autoDistributeForm" method="POST" action="{{ route('admin.class-distribution.run') }}">
                 @csrf
                 <button type="button"
@@ -113,11 +119,37 @@
                         <p class="text-sm text-slate-500 mt-1">{{ $group->package->name }}</p>
                     </div>
 
-                    <span
-                        class="class-counter inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm font-extrabold"
-                        data-capacity="{{ $group->capacity }}">
-                        {{ $filled }}/{{ $group->capacity }}
-                    </span>
+                    <div class="flex flex-col items-end gap-2">
+                        <span
+                            class="class-counter inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm font-extrabold"
+                            data-capacity="{{ $group->capacity }}">
+                            {{ $filled }}/{{ $group->capacity }}
+                        </span>
+
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openEditClassModal(
+                {{ $group->id }},
+                {{ $group->package_id }},
+                '{{ addslashes($group->name) }}',
+                {{ $group->capacity }},
+                {{ $group->is_locked ? 1 : 0 }}
+            )" class="w-10 h-10 inline-flex items-center justify-center rounded-2xl bg-blue-50 text-blue-700 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition"
+                                title="Edit kelas">
+                                <i class="fa-solid fa-pen-to-square text-sm"></i>
+                            </button>
+
+                            <form method="POST" action="{{ route('admin.class-distribution.classes.destroy', $group) }}"
+                                onsubmit="return confirmDeleteClass(event, {{ $group->students->count() }})">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="w-10 h-10 inline-flex items-center justify-center rounded-2xl bg-red-50 text-red-700 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600 transition"
+                                    title="Hapus kelas">
+                                    <i class="fa-solid fa-trash text-sm"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="mb-5">
@@ -188,12 +220,163 @@
             </div>
         @endforelse
     </div>
+
+    <div id="classModal" class="hidden fixed inset-0 bg-black/40 z-50 items-center justify-center p-4">
+        <div class="bg-white rounded-[32px] w-full max-w-2xl shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-5 border-b border-slate-200">
+                <div>
+                    <h2 id="classModalTitle" class="text-2xl font-extrabold text-slate-900">Tambah Kelas</h2>
+                    <p class="text-sm text-slate-500 mt-1">Kelola kelas hasil distribusi secara manual.</p>
+                </div>
+
+                <button type="button" onclick="closeClassModal()"
+                    class="w-11 h-11 rounded-2xl hover:bg-slate-100 text-slate-500 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="classForm" method="POST" action="{{ route('admin.class-distribution.classes.store') }}"
+                class="p-6 space-y-5">
+                @csrf
+                <input type="hidden" name="_method" id="classFormMethod" value="POST">
+                <input type="hidden" name="form_mode" id="classFormMode" value="create">
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Jurusan</label>
+                    <select name="package_id" id="class_package_id"
+                        class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+                        <option value="">Pilih jurusan</option>
+                        @foreach($packages as $package)
+                            <option value="{{ $package->id }}">{{ $package->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Nama Kelas</label>
+                        <input name="name" id="class_name" placeholder="XI IPA 1"
+                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Kapasitas</label>
+                        <input name="capacity" id="class_capacity" type="number" min="1" max="100" value="30"
+                            class="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none transition">
+                    </div>
+                </div>
+
+                <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+                    <input type="checkbox" name="is_locked" value="1" id="class_is_locked"
+                        class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                    <span class="text-sm font-bold text-slate-700">Kunci kelas</span>
+                </label>
+
+                <div class="flex items-center justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeClassModal()"
+                        class="px-5 py-3 rounded-2xl border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition">
+                        Batal
+                    </button>
+
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow-lg shadow-blue-200 transition">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        Simpan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
     <script>
+        const classModal = document.getElementById('classModal');
+        const classForm = document.getElementById('classForm');
+        const classFormMethod = document.getElementById('classFormMethod');
+        const classPackageInput = document.getElementById('class_package_id');
+        const classNameInput = document.getElementById('class_name');
+        const classCapacityInput = document.getElementById('class_capacity');
+        const classLockedInput = document.getElementById('class_is_locked');
+        const classModalTitle = document.getElementById('classModalTitle');
+        const classFormMode = document.getElementById('classFormMode');
+        const classUpdateBase = @json(url('admin/class-distribution/classes'));
+
+        function openCreateClassModal() {
+            classModalTitle.textContent = 'Tambah Kelas';
+            classForm.action = '{{ route('admin.class-distribution.classes.store') }}';
+            classFormMethod.value = 'POST';
+            classFormMode.value = 'create';
+            classPackageInput.value = '';
+            classNameInput.value = '';
+            classCapacityInput.value = 30;
+            classLockedInput.checked = false;
+            classModal.classList.remove('hidden');
+            classModal.classList.add('flex');
+        }
+
+        function openEditClassModal(id, packageId, name, capacity, isLocked) {
+            classModalTitle.textContent = 'Edit Kelas';
+            classForm.action = classUpdateBase + '/' + id;
+            classFormMethod.value = 'PUT';
+            classFormMode.value = 'edit';
+            classPackageInput.value = packageId;
+            classNameInput.value = name;
+            classCapacityInput.value = capacity;
+            classLockedInput.checked = Boolean(isLocked);
+            classModal.classList.remove('hidden');
+            classModal.classList.add('flex');
+        }
+
+        function closeClassModal() {
+            classModal.classList.add('hidden');
+            classModal.classList.remove('flex');
+        }
+
+        classModal.addEventListener('click', function (event) {
+            if (event.target === classModal) {
+                closeClassModal();
+            }
+        });
+
+        classForm.addEventListener('submit', function () {
+            classFormMethod.value = classFormMode.value === 'edit' ? 'PUT' : 'POST';
+        });
+
+        function confirmDeleteClass(event, studentCount) {
+            event.preventDefault();
+
+            if (studentCount > 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Kelas masih berisi siswa',
+                    text: 'Pindahkan atau kosongkan siswa terlebih dahulu sebelum menghapus kelas ini.',
+                    confirmButtonColor: '#2563eb'
+                });
+
+                return false;
+            }
+
+            Swal.fire({
+                icon: 'question',
+                title: 'Hapus kelas ini?',
+                text: 'Aksi ini akan menghapus kelas secara permanen.',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, hapus',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    event.target.submit();
+                }
+            });
+
+            return false;
+        }
+
         function confirmAction(formId, title, text) {
             Swal.fire({
                 icon: 'question',

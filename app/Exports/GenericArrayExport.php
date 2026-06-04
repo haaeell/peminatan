@@ -28,8 +28,29 @@ class GenericArrayExport implements FromArray, ShouldAutoSize, WithHeadings, Wit
 
     public function styles(Worksheet $sheet): array
     {
+        foreach ($this->rows as $index => $row) {
+            if (count($row) === 1 && str_starts_with((string) $row[0], 'KELAS: ')) {
+                $rowNumber = $index + 2;
+                $sheet->mergeCells('A' . $rowNumber . ':' . $this->columnLetter(count($this->headings)) . $rowNumber);
+                $sheet->getStyle('A' . $rowNumber)->getFont()->setBold(true);
+            }
+        }
+
         return [
             1 => ['font' => ['bold' => true]],
         ];
+    }
+
+    private function columnLetter(int $columnNumber): string
+    {
+        $letter = '';
+
+        while ($columnNumber > 0) {
+            $columnNumber--;
+            $letter = chr(65 + ($columnNumber % 26)) . $letter;
+            $columnNumber = intdiv($columnNumber, 26);
+        }
+
+        return $letter;
     }
 }
