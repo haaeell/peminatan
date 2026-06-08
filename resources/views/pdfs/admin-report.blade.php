@@ -1,6 +1,7 @@
 @php
     $isStudentReport = $title === 'Laporan Data Siswa Lengkap';
     $isTestResultReport = $title === 'Laporan Hasil Tes Siswa';
+    $isClassDistributionReport = $title === 'Laporan Distribusi Kelas';
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -244,6 +245,37 @@
         .test-result-table td:nth-child(10) {
             width: 9%;
         }
+
+        /* Class Distribution Report */
+        .class-distribution-table th:nth-child(1),
+        .class-distribution-table td:nth-child(1) {
+            width: 4%;
+        }
+
+        .class-distribution-table th:nth-child(2),
+        .class-distribution-table td:nth-child(2) {
+            width: 28%;
+        }
+
+        .class-distribution-table th:nth-child(3),
+        .class-distribution-table td:nth-child(3) {
+            width: 18%;
+        }
+
+        .class-distribution-table th:nth-child(4),
+        .class-distribution-table td:nth-child(4) {
+            width: 18%;
+        }
+
+        .class-distribution-table th:nth-child(5),
+        .class-distribution-table td:nth-child(5) {
+            width: 18%;
+        }
+
+        .class-distribution-table th:nth-child(6),
+        .class-distribution-table td:nth-child(6) {
+            width: 14%;
+        }
     </style>
 </head>
 
@@ -272,7 +304,7 @@
         </div>
 
         <table
-            class="{{ $isStudentReport ? 'student-report-table' : ($isTestResultReport ? 'test-result-table' : '') }}">
+            class="{{ $isStudentReport ? 'student-report-table' : ($isTestResultReport ? 'test-result-table' : ($isClassDistributionReport ? 'class-distribution-table' : '')) }}">
             <thead>
                 <tr>
                     @foreach($headings as $heading)

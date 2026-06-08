@@ -229,13 +229,12 @@ class ReportController extends Controller
             'NISN',
             'Kelas Asal',
             'Jurusan',
-            'Kelas Hasil',
             'Jenis Penempatan',
         ];
 
         $groupedRows = $this->groupRowsByOriginClass(
             $classStudents,
-            fn($item) => $item->student?->origin_class,
+            fn($item) => $item->classGroup?->name,
             function ($item) {
                 return [
                     null,
@@ -243,13 +242,12 @@ class ReportController extends Controller
                     $item->student?->nisn ?: '-',
                     $item->student?->origin_class ?: '-',
                     $item->package?->name ?: '-',
-                    $item->classGroup?->name ?: '-',
                     $item->is_manual_override ? 'Manual' : 'Otomatis',
                 ];
             },
             count($headings),
             fn($item) => [
-                $item->student?->origin_class ?: 'ZZZ',
+                $item->classGroup?->name ?: 'ZZZ',
                 $item->student?->name ?: 'ZZZ',
             ]
         );
