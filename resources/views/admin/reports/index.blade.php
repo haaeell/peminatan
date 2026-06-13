@@ -13,7 +13,7 @@
             </div>
         </div>
 
-        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="grid sm:grid-cols-2 xl:grid-cols-5 gap-4">
             <div class="rounded-[26px] border border-slate-200 bg-white p-5">
                 <div class="text-sm font-semibold text-slate-500">Total Siswa</div>
                 <div class="text-4xl font-extrabold text-blue-700 mt-2">{{ $summary['students'] }}</div>
@@ -27,8 +27,16 @@
                 <div class="text-4xl font-extrabold text-blue-700 mt-2">{{ $summary['distributed'] }}</div>
             </div>
             <div class="rounded-[26px] border border-slate-200 bg-white p-5">
-                <div class="text-sm font-semibold text-slate-500">Respons Pengumuman</div>
+                <div class="text-sm font-semibold text-slate-500">Target Respons</div>
+                <div class="text-4xl font-extrabold text-blue-700 mt-2">{{ $summary['response_target'] }}</div>
+            </div>
+            <div class="rounded-[26px] border border-slate-200 bg-white p-5">
+                <div class="text-sm font-semibold text-slate-500">Sudah Respons</div>
                 <div class="text-4xl font-extrabold text-blue-700 mt-2">{{ $summary['responses'] }}</div>
+            </div>
+            <div class="rounded-[26px] border border-slate-200 bg-white p-5">
+                <div class="text-sm font-semibold text-slate-500">Belum Respons</div>
+                <div class="text-4xl font-extrabold text-red-600 mt-2">{{ $summary['not_responses'] }}</div>
             </div>
         </div>
 
@@ -51,6 +59,17 @@
                         @foreach($report['summary_lines'] as $line)
                             <div>{{ $line }}</div>
                         @endforeach
+
+                        @if(!empty($report['not_responded_students']))
+                            <div class="mt-4 border-t border-slate-200 pt-3">
+                                <div class="font-bold text-slate-800 mb-2">Siswa belum respons:</div>
+                                <div class="grid gap-1 max-h-40 overflow-y-auto pr-2">
+                                    @foreach($report['not_responded_students'] as $student)
+                                        <div>{{ $student }}</div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="grid sm:grid-cols-2 gap-3 mt-5">

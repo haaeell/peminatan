@@ -26,7 +26,7 @@ class ObjectionController extends Controller
             'reviewer',
         ])
             ->latest()
-            ->paginate(20);
+            ->get();
 
         $packages = Package::where('is_active', true)
             ->orderBy('name')

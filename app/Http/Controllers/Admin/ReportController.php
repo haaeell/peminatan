@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\GenericArrayExport;
 use App\Http\Controllers\Controller;
+use App\Models\Announcement;
 use App\Models\AnnouncementResponse;
 use App\Models\ClassStudent;
 use App\Models\Objection;
@@ -19,11 +20,26 @@ class ReportController extends Controller
 {
     public function index()
     {
+        $latestPublishedAnnouncement = Announcement::where('is_published', true)
+            ->latest('published_at')
+            ->first();
+        $responseTargetCount = $latestPublishedAnnouncement
+            ? Student::where('status', 'completed')->count()
+            : 0;
+        $latestResponseCount = $latestPublishedAnnouncement
+            ? AnnouncementResponse::where('announcement_id', $latestPublishedAnnouncement->id)
+                ->whereHas('student', fn($query) => $query->where('status', 'completed'))
+                ->distinct('student_id')
+                ->count('student_id')
+            : 0;
+
         $summary = [
             'students' => Student::count(),
             'results' => TestResult::count(),
             'distributed' => ClassStudent::count(),
-            'responses' => AnnouncementResponse::count(),
+            'response_target' => $responseTargetCount,
+            'responses' => $latestResponseCount,
+            'not_responses' => max($responseTargetCount - $latestResponseCount, 0),
         ];
 
         $reports = collect($this->reportDefinitions())
@@ -269,15 +285,40 @@ class ReportController extends Controller
 
     private function announcementResponseReport(): array
     {
-        $responses = AnnouncementResponse::with([
-            'student',
-            'announcement',
-        ])->get();
+        $announcement = Announcement::where('is_published', true)
+            ->latest('published_at')
+            ->first();
 
-        $objections = Objection::with(['student', 'announcement'])
-            ->orderByDesc('created_at')
-            ->get()
-            ->keyBy(fn($objection) => $objection->announcement_id . '-' . $objection->student_id);
+        $students = $announcement
+            ? Student::where('status', 'completed')
+                ->orderBy('origin_class')
+                ->orderBy('name')
+                ->get()
+            : collect();
+
+        $responses = $announcement
+            ? AnnouncementResponse::with(['student', 'announcement'])
+                ->where('announcement_id', $announcement->id)
+                ->whereIn('student_id', $students->pluck('id'))
+                ->get()
+                ->keyBy('student_id')
+            : collect();
+
+        $objections = $announcement
+            ? Objection::with(['student', 'announcement'])
+                ->where('announcement_id', $announcement->id)
+                ->orderByDesc('created_at')
+                ->get()
+                ->keyBy('student_id')
+            : collect();
+
+        $respondedCount = $responses->count();
+        $notRespondedCount = max($students->count() - $respondedCount, 0);
+        $notRespondedStudents = $students
+            ->reject(fn($student) => $responses->has($student->id))
+            ->map(fn($student) => trim(($student->name ?: '-') . ' - ' . ($student->origin_class ?: '-')))
+            ->values()
+            ->all();
 
         $headings = [
             'No',
@@ -286,6 +327,7 @@ class ReportController extends Controller
             'Kelas Asal',
             'Pengumuman',
             'Tipe',
+            'Status Respons',
             'Respons',
             'Tanggal Respons',
             'Status Keberatan',
@@ -293,44 +335,54 @@ class ReportController extends Controller
         ];
 
         $groupedRows = $this->groupRowsByOriginClass(
-            $responses,
-            fn($response) => $response->student?->origin_class,
-            function ($response) use ($objections) {
-                $objection = $objections->get($response->announcement_id . '-' . $response->student_id);
+            $students,
+            fn($student) => $student->origin_class,
+            function ($student) use ($announcement, $responses, $objections) {
+                $response = $responses->get($student->id);
+                $objection = $objections->get($student->id);
 
                 return [
                     null,
-                    $response->student?->name ?: '-',
-                    $response->student?->nisn ?: '-',
-                    $response->student?->origin_class ?: '-',
-                    $response->announcement?->title ?: '-',
-                    $response->announcement?->type ?: '-',
-                    $response->response,
-                    optional($response->responded_at)->format('d-m-Y H:i') ?: '-',
+                    $student->name ?: '-',
+                    $student->nisn ?: '-',
+                    $student->origin_class ?: '-',
+                    $announcement?->title ?: '-',
+                    $announcement?->type ?: '-',
+                    $response ? 'Sudah respons' : 'Belum respons',
+                    match ($response?->response) {
+                        'accepted' => 'Menerima',
+                        'objected' => 'Mengajukan keberatan',
+                        default => '-',
+                    },
+                    optional($response?->responded_at)->format('d-m-Y H:i') ?: '-',
                     $objection?->status ?: '-',
                     $objection?->reason ?: '-',
                 ];
             },
             count($headings),
-            fn($response) => [
-                $response->student?->origin_class ?: 'ZZZ',
-                - ((int) optional($response->responded_at)->timestamp),
-                $response->student?->name ?: 'ZZZ',
+            fn($student) => [
+                $student->origin_class ?: 'ZZZ',
+                $responses->has($student->id) ? 1 : 0,
+                $student->name ?: 'ZZZ',
             ]
         );
 
         return [
             'title' => 'Laporan Respons Pengumuman',
-            'subtitle' => 'Penerimaan hasil, keberatan siswa, dan status tindak lanjut.',
+            'subtitle' => 'Penerimaan hasil, siswa yang belum respons, keberatan siswa, dan status tindak lanjut.',
             'filename' => 'laporan_respons_pengumuman',
             'headings' => $headings,
             'rows' => $this->flattenGroupedRows($groupedRows),
             'grouped_rows' => $groupedRows,
             'summary_lines' => [
-                'Total respons: ' . $responses->count(),
+                'Pengumuman: ' . ($announcement?->title ?: 'Belum ada pengumuman terbit'),
+                'Target siswa selesai tes: ' . $students->count(),
+                'Sudah respons: ' . $respondedCount,
+                'Belum respons: ' . $notRespondedCount,
                 'Menerima: ' . $responses->where('response', 'accepted')->count(),
                 'Mengajukan keberatan: ' . $responses->where('response', 'objected')->count(),
             ],
+            'not_responded_students' => $notRespondedStudents,
         ];
     }
 

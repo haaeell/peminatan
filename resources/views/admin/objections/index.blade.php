@@ -14,21 +14,21 @@
 
     <div class="bg-white border border-slate-200 rounded-[24px] shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="datatable w-full text-sm whitespace-nowrap">
+            <table class="datatable w-full text-sm" data-page-length="-1">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr class="text-slate-500">
-                        <th class="text-left text-xs font-extrabold uppercase">Siswa</th>
-                        <th class="text-left text-xs font-extrabold uppercase">Kelas Asal</th>
+                        <th class="text-left text-xs font-extrabold uppercase whitespace-nowrap">Siswa</th>
+                        <th class="text-left text-xs font-extrabold uppercase whitespace-nowrap">Kelas Asal</th>
                         <th class="text-left text-xs font-extrabold uppercase">Alasan & Hasil Saat Ini</th>
-                        <th class="text-left text-xs font-extrabold uppercase">Status</th>
-                        <th class="text-left text-xs font-extrabold uppercase">Aksi</th>
+                        <th class="text-left text-xs font-extrabold uppercase whitespace-nowrap">Status</th>
+                        <th class="text-left text-xs font-extrabold uppercase whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
 
                 <tbody class="divide-y divide-slate-100">
                     @forelse($objections as $objection)
                         <tr class="hover:bg-slate-50 align-top transition">
-                            <td class="min-w-[180px]">
+                            <td class="min-w-[180px] whitespace-nowrap">
                                 <div class="font-extrabold text-slate-900">
                                     {{ $objection->student?->name ?? '-' }}
                                 </div>
@@ -37,34 +37,34 @@
                                 </div>
                             </td>
 
-                            <td class="px-5 py-4">
+                            <td class="px-5 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">
                                     {{ $objection->student?->origin_class ?? '-' }}
                                 </span>
                             </td>
 
-                            <td class="min-w-[320px] max-w-[460px] whitespace-normal">
-                                <p class="text-sm text-slate-700 leading-relaxed">
+                            <td class="min-w-[320px] max-w-[460px] whitespace-normal align-top">
+                                <p class="max-w-[460px] text-sm text-slate-700 leading-relaxed break-words [overflow-wrap:anywhere]">
                                     {{ $objection->reason }}
                                 </p>
 
                                 <div class="mt-3 grid gap-2 text-xs">
-                                    <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2">
+                                    <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 break-words [overflow-wrap:anywhere]">
                                         <span class="font-bold text-slate-500">Rekomendasi:</span>
                                         <span class="font-extrabold text-slate-800">{{ $objection->student?->result?->recommendedPackage?->name ?? '-' }}</span>
                                     </div>
 
-                                    <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2">
+                                    <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 break-words [overflow-wrap:anywhere]">
                                         <span class="font-bold text-slate-500">Final saat ini:</span>
                                         <span class="font-extrabold text-slate-800">{{ $objection->student?->result?->finalPackage?->name ?? '-' }}</span>
                                     </div>
 
-                                    <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2">
+                                    <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 break-words [overflow-wrap:anywhere]">
                                         <span class="font-bold text-slate-500">Kelas saat ini:</span>
                                         <span class="font-extrabold text-slate-800">{{ $objection->student?->classStudent?->classGroup?->name ?? '-' }}</span>
                                     </div>
 
-                                    <div class="rounded-xl bg-blue-50 border border-blue-100 px-3 py-2 text-blue-700">
+                                    <div class="rounded-xl bg-blue-50 border border-blue-100 px-3 py-2 text-blue-700 break-words [overflow-wrap:anywhere]">
                                         <span class="font-bold">Pilihan siswa:</span>
                                         {{ $objection->student?->packageChoice?->firstPackage?->name ?? '-' }}
                                         /
@@ -73,7 +73,7 @@
                                 </div>
                             </td>
 
-                            <td class="px-5 py-4">
+                            <td class="px-5 py-4 whitespace-nowrap">
                                 @if($objection->status === 'pending')
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-yellow-50 text-yellow-700 text-xs font-extrabold">
                                         <i class="fa-solid fa-clock"></i>
@@ -95,7 +95,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="min-w-[420px]">
+                            <td class="min-w-[420px] align-top">
                                 @if($objection->status === 'pending')
                                     <div class="grid gap-3">
                                         <form method="POST" action="{{ route('admin.objections.approve', $objection) }}"
@@ -163,7 +163,7 @@
                                         </span>
 
                                         @if($objection->admin_note)
-                                            <div class="rounded-2xl bg-slate-50 border border-slate-200 px-3 py-2 text-sm text-slate-600 whitespace-normal">
+                                            <div class="rounded-2xl bg-slate-50 border border-slate-200 px-3 py-2 text-sm text-slate-600 whitespace-normal break-words [overflow-wrap:anywhere]">
                                                 <span class="font-bold">Catatan admin:</span>
                                                 {{ $objection->admin_note }}
                                             </div>
@@ -174,7 +174,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-5 py-16 text-center">
+                            <td colspan="5" class="px-5 py-16 text-center">
                                 <div class="mx-auto w-16 h-16 rounded-3xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
                                     <i class="fa-solid fa-message text-2xl"></i>
                                 </div>

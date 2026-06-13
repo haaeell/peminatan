@@ -624,9 +624,17 @@
                 }
             });
 
-            $('.datatable').DataTable({
-                responsive: true,
-                pageLength: 10,
+            $('.datatable').each(function () {
+                const pageLength = Number($(this).data('page-length') ?? 10);
+
+                $(this).DataTable({
+                    responsive: true,
+                    pageLength,
+                    lengthMenu: [
+                        [10, 25, 50, -1],
+                        [10, 25, 50, 'Semua'],
+                    ],
+                });
             });
 
             window.confirmDelete = function (formId) {
