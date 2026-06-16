@@ -107,12 +107,14 @@
         </div>
     @endif
 
-    <div class="grid xl:grid-cols-3 md:grid-cols-2 gap-6">
+    <div class="grid xl:grid-cols-2 gap-6">
         @forelse($classGroups as $group)
             @php
                 $filled = $group->students->count();
                 $capacity = max((int) $group->capacity, 1);
                 $percent = min(100, round(($filled / $capacity) * 100));
+                $maleCount   = $group->students->filter(fn($cs) => $cs->student?->biodata?->gender === 'L')->count();
+                $femaleCount = $group->students->filter(fn($cs) => $cs->student?->biodata?->gender === 'P')->count();
             @endphp
 
             <div
@@ -133,6 +135,11 @@
                             data-capacity="{{ $group->capacity }}">
                             {{ $filled }}/{{ $group->capacity }}
                         </span>
+
+                        <div class="flex items-center gap-1.5 text-xs font-bold">
+                            <span class="px-2 py-0.5 rounded-lg bg-blue-100 text-blue-700">L: {{ $maleCount }}</span>
+                            <span class="px-2 py-0.5 rounded-lg bg-pink-100 text-pink-600">P: {{ $femaleCount }}</span>
+                        </div>
 
                         <div class="flex items-center gap-2">
                             <button type="button" onclick="openEditClassModal(
