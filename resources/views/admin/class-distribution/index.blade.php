@@ -86,7 +86,15 @@
                 @foreach($unassignedStudents as $student)
                     <div class="student-card bg-amber-50 border border-amber-200 rounded-2xl p-3 cursor-move"
                         data-student-id="{{ $student->id }}">
-                        <div class="font-extrabold text-slate-900">{{ $student->name }}</div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-extrabold text-slate-900 truncate">{{ $student->name }}</span>
+                            @if($student->biodata?->gender)
+                                <span class="shrink-0 text-[10px] px-1.5 py-0.5 rounded-md font-bold
+                                    {{ $student->biodata->gender === 'L' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700' }}">
+                                    {{ $student->biodata->gender }}
+                                </span>
+                            @endif
+                        </div>
                         <div class="text-xs text-slate-500 mt-1">
                             {{ $student->origin_class }}
                             @if($student->result)
@@ -180,8 +188,16 @@
                             </div>
 
                             <div class="flex-1 min-w-0">
-                                <div class="text-sm font-extrabold text-slate-900 truncate">
-                                    {{ $item->student->name }}
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-sm font-extrabold text-slate-900 truncate">
+                                        {{ $item->student->name }}
+                                    </span>
+                                    @if($item->student->biodata?->gender)
+                                        <span class="shrink-0 text-[10px] px-1.5 py-0.5 rounded-md font-bold
+                                            {{ $item->student->biodata->gender === 'L' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700' }}">
+                                            {{ $item->student->biodata->gender }}
+                                        </span>
+                                    @endif
                                 </div>
 
                                 <div class="text-xs text-slate-500 truncate">

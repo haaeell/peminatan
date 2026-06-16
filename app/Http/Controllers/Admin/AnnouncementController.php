@@ -7,6 +7,7 @@ use App\Models\Announcement;
 use App\Models\ClassStudent;
 use App\Models\TestResult;
 use App\Services\ActivityLogService;
+use App\Services\ClassDistributionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -54,34 +55,47 @@ class AnnouncementController extends Controller
         DB::transaction(function () use ($announcement) {
             // Flush all staged placements to live columns when the final announcement is published.
             if ($announcement->type === 'final') {
-                $pending = ClassStudent::hasPendingChange()->get();
+                ClassStudent::hasPendingChange()
+                    ->whereNotNull('pending_package_id')
+                    ->get()
+                    ->each(function (ClassStudent $cs) {
+                        $newClassGroupId = $cs->pending_class_group_id;
+                        $newPackageId    = $cs->pending_package_id;
 
-                foreach ($pending as $classStudent) {
-                    $newClassGroupId = $classStudent->pending_class_group_id;
-                    $newPackageId = $classStudent->pending_package_id;
+                        $cs->update([
+                            'class_group_id'         => $newClassGroupId,
+                            'package_id'             => $newPackageId,
+                            'pending_class_group_id' => null,
+                            'pending_package_id'     => null,
+                        ]);
 
-                    $classStudent->update([
-                        'class_group_id' => $newClassGroupId,
-                        'package_id' => $newPackageId,
-                        'pending_class_group_id' => null,
-                        'pending_package_id' => null,
-                    ]);
-
-                    TestResult::where('student_id', $classStudent->student_id)
-                        ->update(['final_package_id' => $newPackageId]);
-                }
+                        TestResult::where('student_id', $cs->student_id)
+                            ->update(['final_package_id' => $newPackageId]);
+                    });
             }
 
             $announcement->update([
-                'is_published' => true,
-                'published_at' => now(),
-                'published_by' => auth()->id(),
+                'is_published'  => true,
+                'published_at'  => now(),
+                'published_by'  => auth()->id(),
             ]);
         });
 
         $logger->log('announcement', 'publish', $announcement);
 
         return back()->with('success', 'Pengumuman berhasil dipublikasikan.');
+    }
+
+    public function lockFinal(Announcement $announcement, ClassDistributionService $distribution, ActivityLogService $logger)
+    {
+        abort_if($announcement->type !== 'final', 422, 'Hanya pengumuman final yang bisa dikunci.');
+        abort_if(!$announcement->is_published, 422, 'Publish pengumuman terlebih dahulu sebelum mengunci.');
+
+        $distribution->lockAll();
+
+        $logger->log('announcement', 'lock_final', $announcement);
+
+        return back()->with('success', 'Pengumuman final berhasil dikunci. Data tidak dapat diubah lagi.');
     }
 
     public function destroy(Announcement $announcement, ActivityLogService $logger)

@@ -23,6 +23,7 @@ class ClassDistributionController extends Controller
         // This lets the admin see where each student will end up after the final announcement.
         $allClassStudents = ClassStudent::with([
             'student.result',
+            'student.biodata',
             'student.packageChoice.firstPackage',
             'student.packageChoice.secondPackage',
             'classGroup',
@@ -38,7 +39,7 @@ class ClassDistributionController extends Controller
 
         $unassignedStudents = Student::whereDoesntHave('classStudent')
             ->where('status', 'completed')
-            ->with('result')
+            ->with(['result', 'biodata'])
             ->get();
 
         return view('admin.class-distribution.index', compact(

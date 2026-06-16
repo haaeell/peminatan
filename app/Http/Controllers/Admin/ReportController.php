@@ -108,6 +108,7 @@ class ReportController extends Controller
             'packageChoice.firstPackage',
             'packageChoice.secondPackage',
             'classStudent.classGroup',
+            'classStudent.pendingClassGroup',
             'result.finalPackage',
         ])->get();
 
@@ -130,6 +131,9 @@ class ReportController extends Controller
             $students,
             fn($student) => $student->origin_class,
             function ($student) {
+                $cs = $student->classStudent;
+                $effectiveClass = $cs?->hasPendingChange() ? $cs->pendingClassGroup : $cs?->classGroup;
+
                 return [
                     null,
                     $student->name,
@@ -144,7 +148,7 @@ class ReportController extends Controller
                     $student->biodata?->father_name ?: '-',
                     $student->biodata?->mother_name ?: '-',
                     $student->biodata?->parent_phone ?: '-',
-                    $student->classStudent?->classGroup?->name ?: '-',
+                    $effectiveClass?->name ?: '-',
                 ];
             },
             count($headings),
@@ -172,7 +176,7 @@ class ReportController extends Controller
         $results = TestResult::with([
             'student.packageChoice.firstPackage',
             'student.packageChoice.secondPackage',
-            'student.classStudent.classGroup',
+            'student.classStudent.pendingPackage',
             'student.result.finalPackage',
             'recommendedPackage',
             'finalPackage',
@@ -205,7 +209,9 @@ class ReportController extends Controller
                     $result->student?->packageChoice?->firstPackage?->name ?: '-',
                     $result->student?->packageChoice?->secondPackage?->name ?: '-',
                     $result->recommendedPackage?->name ?: '-',
-                    $result->finalPackage?->name ?: '-',
+                    ($result->student?->classStudent?->hasPendingChange()
+                        ? $result->student->classStudent->pendingPackage
+                        : $result->finalPackage)?->name ?: '-',
                     $result->student?->packageChoice?->post_graduation_plan ?: '-',
                 ];
             },
