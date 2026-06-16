@@ -241,8 +241,10 @@ class ReportController extends Controller
     {
         $classStudents = ClassStudent::with([
             'student',
-            'classGroup.package',
+            'classGroup',
+            'pendingClassGroup',
             'package',
+            'pendingPackage',
         ])->get();
 
         $headings = [
@@ -250,26 +252,31 @@ class ReportController extends Controller
             'Nama',
             'NISN',
             'Kelas Asal',
+            'Kelas Penempatan',
             'Jurusan',
             'Jenis Penempatan',
         ];
 
         $groupedRows = $this->groupRowsByOriginClass(
             $classStudents,
-            fn($item) => $item->classGroup?->name,
+            fn($item) => ($item->hasPendingChange() ? $item->pendingClassGroup : $item->classGroup)?->name,
             function ($item) {
+                $effectiveClass   = $item->hasPendingChange() ? $item->pendingClassGroup   : $item->classGroup;
+                $effectivePackage = $item->hasPendingChange() ? $item->pendingPackage : $item->package;
+
                 return [
                     null,
                     $item->student?->name ?: '-',
                     $item->student?->nisn ?: '-',
                     $item->student?->origin_class ?: '-',
-                    $item->package?->name ?: '-',
+                    $effectiveClass?->name ?: '-',
+                    $effectivePackage?->name ?: '-',
                     $item->is_manual_override ? 'Manual' : 'Otomatis',
                 ];
             },
             count($headings),
             fn($item) => [
-                $item->classGroup?->name ?: 'ZZZ',
+                ($item->hasPendingChange() ? $item->pendingClassGroup : $item->classGroup)?->name ?: 'ZZZ',
                 $item->student?->name ?: 'ZZZ',
             ]
         );
@@ -285,6 +292,7 @@ class ReportController extends Controller
                 'Total siswa terdistribusi: ' . $classStudents->count(),
                 'Penempatan otomatis: ' . $classStudents->where('is_manual_override', false)->count(),
                 'Penempatan manual: ' . $classStudents->where('is_manual_override', true)->count(),
+                'Menunggu konfirmasi final: ' . $classStudents->filter->hasPendingChange()->count(),
             ],
         ];
     }
