@@ -92,15 +92,27 @@ class ClassDistributionService
                 abort(422, 'Kapasitas kelas sudah penuh.');
             }
 
-            // Stage the change — do NOT write to live columns until Final Announcement is published.
-            ClassStudent::updateOrCreate(
-                ['student_id' => $studentId],
-                [
+            $existing = ClassStudent::where('student_id', $studentId)->first();
+
+            if ($existing) {
+                // Stage the change — live columns stay until Final Announcement is published.
+                $existing->update([
                     'pending_class_group_id' => $classGroup->id,
                     'pending_package_id' => $classGroup->package_id,
                     'is_manual_override' => true,
-                ]
-            );
+                ]);
+            } else {
+                // First-time assignment (never auto-distributed): write to both live and pending
+                // so the student is immediately visible in the class while staging is still respected.
+                ClassStudent::create([
+                    'student_id' => $studentId,
+                    'class_group_id' => $classGroup->id,
+                    'package_id' => $classGroup->package_id,
+                    'pending_class_group_id' => $classGroup->id,
+                    'pending_package_id' => $classGroup->package_id,
+                    'is_manual_override' => true,
+                ]);
+            }
         });
     }
 

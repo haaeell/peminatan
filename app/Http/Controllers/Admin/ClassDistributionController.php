@@ -14,14 +14,22 @@ class ClassDistributionController extends Controller
 {
     public function index()
     {
-        $classGroups = ClassGroup::with([
-            'package',
-            'students.student.result',
-            'students.student.packageChoice.firstPackage',
-            'students.student.packageChoice.secondPackage',
-        ])
+        $classGroups = ClassGroup::with(['package'])
             ->orderBy('name')
             ->get();
+
+        // Group students by their effective class: pending takes precedence over live.
+        // This lets the admin see where each student will end up after the final announcement.
+        $allClassStudents = ClassStudent::with([
+            'student.result',
+            'student.packageChoice.firstPackage',
+            'student.packageChoice.secondPackage',
+            'classGroup',
+        ])->get()->groupBy(fn($cs) => $cs->pending_class_group_id ?? $cs->class_group_id);
+
+        $classGroups->each(function ($group) use ($allClassStudents) {
+            $group->setRelation('students', $allClassStudents->get($group->id, collect()));
+        });
 
         $packages = Package::where('is_active', true)
             ->orderBy('code')

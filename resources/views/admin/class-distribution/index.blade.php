@@ -192,7 +192,12 @@
                                 </div>
                             </div>
 
-                            @if($item->is_manual_override)
+                            @if($item->hasPendingChange() && $item->pending_class_group_id !== $item->class_group_id)
+                                <span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-bold border border-amber-200"
+                                    title="Akan dipindahkan dari {{ $item->classGroup->name ?? '-' }} · belum final">
+                                    Pending
+                                </span>
+                            @elseif($item->is_manual_override)
                                 <span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold">
                                     Manual
                                 </span>
