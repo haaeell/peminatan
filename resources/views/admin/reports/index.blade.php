@@ -13,10 +13,14 @@
             </div>
         </div>
 
-        <div class="grid sm:grid-cols-2 xl:grid-cols-5 gap-4">
+        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <div class="rounded-[26px] border border-slate-200 bg-white p-5">
                 <div class="text-sm font-semibold text-slate-500">Total Siswa</div>
                 <div class="text-4xl font-extrabold text-blue-700 mt-2">{{ $summary['students'] }}</div>
+                <div class="flex items-center gap-3 mt-3 text-xs font-bold">
+                    <span class="text-blue-600">L: {{ $summary['male'] }}</span>
+                    <span class="text-pink-500">P: {{ $summary['female'] }}</span>
+                </div>
             </div>
             <div class="rounded-[26px] border border-slate-200 bg-white p-5">
                 <div class="text-sm font-semibold text-slate-500">Hasil Tes</div>

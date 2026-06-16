@@ -33,8 +33,15 @@ class ReportController extends Controller
                 ->count('student_id')
             : 0;
 
+        $genderCounts = \App\Models\StudentBiodata::query()
+            ->selectRaw('gender, count(*) as total')
+            ->groupBy('gender')
+            ->pluck('total', 'gender');
+
         $summary = [
             'students' => Student::count(),
+            'male' => $genderCounts->get('L', 0),
+            'female' => $genderCounts->get('P', 0),
             'results' => TestResult::count(),
             'distributed' => ClassStudent::count(),
             'response_target' => $responseTargetCount,
