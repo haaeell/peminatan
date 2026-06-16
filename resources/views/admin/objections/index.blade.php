@@ -54,14 +54,52 @@
                                         <span class="font-extrabold text-slate-800">{{ $objection->student?->result?->recommendedPackage?->name ?? '-' }}</span>
                                     </div>
 
+                                    @php
+                                        $psyScores = collect($objection->student?->result?->psychology_scores ?? [])
+                                            ->map(fn($score, $pkgId) => [
+                                                'name'  => $packages->firstWhere('id', (int) $pkgId)?->name ?? 'Jurusan #'.$pkgId,
+                                                'score' => $score,
+                                            ])
+                                            ->sortByDesc('score')
+                                            ->values();
+                                    @endphp
+
+                                    @if($psyScores->isNotEmpty())
+                                        <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2">
+                                            <span class="font-bold text-slate-500 block mb-1.5">Skor psikologi:</span>
+                                            <div class="flex flex-wrap gap-1.5">
+                                                @foreach($psyScores as $i => $ps)
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-bold
+                                                        {{ $i === 0 ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600' }}">
+                                                        {{ $ps['name'] }}
+                                                        <span class="font-extrabold">{{ $ps['score'] }}</span>
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @php
+                                        $cs = $objection->student?->classStudent;
+                                        $hasPending = $cs?->hasPendingChange();
+                                        $effectivePkg  = $hasPending ? $cs->pendingPackage  : $objection->student?->result?->finalPackage;
+                                        $effectiveClass = $hasPending ? $cs->pendingClassGroup : $cs?->classGroup;
+                                    @endphp
+
                                     <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 break-words [overflow-wrap:anywhere]">
                                         <span class="font-bold text-slate-500">Final saat ini:</span>
-                                        <span class="font-extrabold text-slate-800">{{ $objection->student?->result?->finalPackage?->name ?? '-' }}</span>
+                                        <span class="font-extrabold text-slate-800">{{ $effectivePkg?->name ?? '-' }}</span>
+                                        @if($hasPending)
+                                            <span class="ml-1 text-[10px] font-bold text-amber-600">(pending)</span>
+                                        @endif
                                     </div>
 
                                     <div class="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 break-words [overflow-wrap:anywhere]">
                                         <span class="font-bold text-slate-500">Kelas saat ini:</span>
-                                        <span class="font-extrabold text-slate-800">{{ $objection->student?->classStudent?->classGroup?->name ?? '-' }}</span>
+                                        <span class="font-extrabold text-slate-800">{{ $effectiveClass?->name ?? '-' }}</span>
+                                        @if($hasPending && $cs->pending_class_group_id !== $cs->class_group_id)
+                                            <span class="ml-1 text-[10px] font-bold text-amber-600">(pending)</span>
+                                        @endif
                                     </div>
 
                                     <div class="rounded-xl bg-blue-50 border border-blue-100 px-3 py-2 text-blue-700 break-words [overflow-wrap:anywhere]">
@@ -103,13 +141,25 @@
                                             @csrf
 
                                             <div class="grid sm:grid-cols-2 gap-2">
+                                                @php
+                                                    $approvalCs = $objection->student?->classStudent;
+                                                    $approvalHasPending = $approvalCs?->hasPendingChange();
+                                                    $defaultPkgId = $approvalHasPending
+                                                        ? $approvalCs->pending_package_id
+                                                        : ($objection->student?->result?->final_package_id
+                                                            ?? $objection->student?->result?->recommended_package_id);
+                                                    $defaultClassId = $approvalHasPending
+                                                        ? $approvalCs->pending_class_group_id
+                                                        : $approvalCs?->class_group_id;
+                                                @endphp
+
                                                 <select name="final_package_id"
                                                     class="approvalPackageSelect w-full px-3 py-2 rounded-xl border border-green-100 bg-white text-sm text-slate-700 focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none transition"
                                                     required>
                                                     <option value="">Pilih jurusan final</option>
                                                     @foreach($packages as $package)
                                                         <option value="{{ $package->id }}"
-                                                            {{ (int) ($objection->student?->result?->final_package_id ?? $objection->student?->result?->recommended_package_id) === (int) $package->id ? 'selected' : '' }}>
+                                                            {{ (int) $defaultPkgId === (int) $package->id ? 'selected' : '' }}>
                                                             {{ $package->name }}
                                                         </option>
                                                     @endforeach
@@ -117,13 +167,13 @@
 
                                                 <select name="class_group_id"
                                                     class="approvalClassSelect w-full px-3 py-2 rounded-xl border border-green-100 bg-white text-sm text-slate-700 focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none transition"
-                                                    data-current-class="{{ $objection->student?->classStudent?->class_group_id }}"
+                                                    data-current-class="{{ $defaultClassId }}"
                                                     required>
                                                     <option value="">Pilih kelas tujuan</option>
                                                     @foreach($classGroups as $group)
                                                         <option value="{{ $group->id }}"
                                                             data-package-id="{{ $group->package_id }}"
-                                                            {{ (int) $objection->student?->classStudent?->class_group_id === (int) $group->id ? 'selected' : '' }}>
+                                                            {{ (int) $defaultClassId === (int) $group->id ? 'selected' : '' }}>
                                                             {{ $group->name }} - {{ $group->package?->code ?? $group->package?->name }}
                                                             ({{ $group->students_count }}/{{ $group->capacity }})
                                                         </option>

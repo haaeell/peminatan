@@ -21,6 +21,8 @@ class ObjectionController extends Controller
             'student.result.recommendedPackage',
             'student.result.finalPackage',
             'student.classStudent.classGroup',
+            'student.classStudent.pendingClassGroup',
+            'student.classStudent.pendingPackage',
             'announcement',
             'reviewer',
         ])
@@ -31,11 +33,18 @@ class ObjectionController extends Controller
             ->orderBy('name')
             ->get();
 
-        $classGroups = ClassGroup::withCount('students')
-            ->with('package')
+        // Effective occupancy per class: pending_class_group_id takes precedence over class_group_id.
+        $effectiveOccupancy = ClassStudent::selectRaw(
+            'COALESCE(pending_class_group_id, class_group_id) as eff_id, COUNT(*) as cnt'
+        )->groupBy('eff_id')->pluck('cnt', 'eff_id');
+
+        $classGroups = ClassGroup::with('package')
             ->orderBy('package_id')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->each(function ($group) use ($effectiveOccupancy) {
+                $group->students_count = $effectiveOccupancy->get($group->id, 0);
+            });
 
         return view('admin.objections.index', compact('objections', 'packages', 'classGroups'));
     }
