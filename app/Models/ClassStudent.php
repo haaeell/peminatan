@@ -11,6 +11,8 @@ class ClassStudent extends Model
         'student_id',
         'package_id',
         'is_manual_override',
+        'pending_class_group_id',
+        'pending_package_id',
     ];
 
     protected $casts = [
@@ -30,5 +32,25 @@ class ClassStudent extends Model
     public function package()
     {
         return $this->belongsTo(Package::class);
+    }
+
+    public function pendingClassGroup()
+    {
+        return $this->belongsTo(ClassGroup::class, 'pending_class_group_id');
+    }
+
+    public function pendingPackage()
+    {
+        return $this->belongsTo(Package::class, 'pending_package_id');
+    }
+
+    public function scopeHasPendingChange($query)
+    {
+        return $query->whereNotNull('pending_class_group_id');
+    }
+
+    public function hasPendingChange(): bool
+    {
+        return $this->pending_class_group_id !== null;
     }
 }

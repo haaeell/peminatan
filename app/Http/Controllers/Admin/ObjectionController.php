@@ -7,7 +7,6 @@ use App\Models\ClassGroup;
 use App\Models\ClassStudent;
 use App\Models\Objection;
 use App\Models\Package;
-use App\Models\TestResult;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -52,7 +51,6 @@ class ObjectionController extends Controller
         DB::transaction(function () use ($validated, $objection) {
             $classGroup = ClassGroup::findOrFail($validated['class_group_id']);
             $student = $objection->student;
-            $currentPlacement = $student?->classStudent;
 
             abort_if(!$student, 422, 'Data siswa tidak ditemukan.');
             abort_if(
@@ -61,25 +59,27 @@ class ObjectionController extends Controller
                 'Kelas tujuan harus sesuai dengan jurusan final yang dipilih.'
             );
 
-            $classOccupancy = $classGroup->students()
-                ->when($currentPlacement, fn($query) => $query->where('student_id', '!=', $student->id))
+            // Count both live occupants and other students already staged into this class.
+            $liveCount = $classGroup->students()
+                ->where('student_id', '!=', $student->id)
                 ->count();
 
-            abort_if($classOccupancy >= $classGroup->capacity, 422, 'Kapasitas kelas tujuan sudah penuh.');
+            $pendingCount = ClassStudent::where('pending_class_group_id', $classGroup->id)
+                ->where('student_id', '!=', $student->id)
+                ->count();
 
-            TestResult::updateOrCreate(
-                ['student_id' => $student->id],
-                [
-                    'final_package_id' => $validated['final_package_id'],
-                    'is_locked' => false,
-                ]
+            abort_if(
+                $liveCount + $pendingCount >= $classGroup->capacity,
+                422,
+                'Kapasitas kelas tujuan sudah penuh.'
             );
 
+            // Stage the change — do NOT write to live columns until Final Announcement is published.
             ClassStudent::updateOrCreate(
                 ['student_id' => $student->id],
                 [
-                    'class_group_id' => $classGroup->id,
-                    'package_id' => $validated['final_package_id'],
+                    'pending_class_group_id' => $classGroup->id,
+                    'pending_package_id' => $validated['final_package_id'],
                     'is_manual_override' => true,
                 ]
             );

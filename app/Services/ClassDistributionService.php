@@ -79,26 +79,28 @@ class ClassDistributionService
                 abort(422, 'Kelas sudah dikunci.');
             }
 
-            $currentCount = $classGroup->students()
+            // Count both live occupants and other students already staged into this class.
+            $liveCount = $classGroup->students()
                 ->where('student_id', '!=', $studentId)
                 ->count();
 
-            if ($currentCount >= $classGroup->capacity) {
+            $pendingCount = ClassStudent::where('pending_class_group_id', $classGroup->id)
+                ->where('student_id', '!=', $studentId)
+                ->count();
+
+            if ($liveCount + $pendingCount >= $classGroup->capacity) {
                 abort(422, 'Kapasitas kelas sudah penuh.');
             }
 
+            // Stage the change — do NOT write to live columns until Final Announcement is published.
             ClassStudent::updateOrCreate(
                 ['student_id' => $studentId],
                 [
-                    'class_group_id' => $classGroup->id,
-                    'package_id' => $classGroup->package_id,
+                    'pending_class_group_id' => $classGroup->id,
+                    'pending_package_id' => $classGroup->package_id,
                     'is_manual_override' => true,
                 ]
             );
-
-            TestResult::where('student_id', $studentId)->update([
-                'final_package_id' => $classGroup->package_id,
-            ]);
         });
     }
 

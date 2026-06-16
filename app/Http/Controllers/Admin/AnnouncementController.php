@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Announcement;
+use App\Models\ClassStudent;
+use App\Models\TestResult;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AnnouncementController extends Controller
 {
@@ -48,11 +51,33 @@ class AnnouncementController extends Controller
 
     public function publish(Announcement $announcement, ActivityLogService $logger)
     {
-        $announcement->update([
-            'is_published' => true,
-            'published_at' => now(),
-            'published_by' => auth()->id(),
-        ]);
+        DB::transaction(function () use ($announcement) {
+            // Flush all staged placements to live columns when the final announcement is published.
+            if ($announcement->type === 'final') {
+                $pending = ClassStudent::hasPendingChange()->get();
+
+                foreach ($pending as $classStudent) {
+                    $newClassGroupId = $classStudent->pending_class_group_id;
+                    $newPackageId = $classStudent->pending_package_id;
+
+                    $classStudent->update([
+                        'class_group_id' => $newClassGroupId,
+                        'package_id' => $newPackageId,
+                        'pending_class_group_id' => null,
+                        'pending_package_id' => null,
+                    ]);
+
+                    TestResult::where('student_id', $classStudent->student_id)
+                        ->update(['final_package_id' => $newPackageId]);
+                }
+            }
+
+            $announcement->update([
+                'is_published' => true,
+                'published_at' => now(),
+                'published_by' => auth()->id(),
+            ]);
+        });
 
         $logger->log('announcement', 'publish', $announcement);
 
