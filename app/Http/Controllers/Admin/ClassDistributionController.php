@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ClassGroup;
+use App\Models\ClassStudent;
 use App\Models\Package;
 use App\Models\Student;
 use App\Services\ActivityLogService;
