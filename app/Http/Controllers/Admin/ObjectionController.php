@@ -68,17 +68,15 @@ class ObjectionController extends Controller
                 'Kelas tujuan harus sesuai dengan jurusan final yang dipilih.'
             );
 
-            // Count both live occupants and other students already staged into this class.
-            $liveCount = $classGroup->students()
-                ->where('student_id', '!=', $student->id)
-                ->count();
-
-            $pendingCount = ClassStudent::where('pending_class_group_id', $classGroup->id)
-                ->where('student_id', '!=', $student->id)
-                ->count();
+            // Effective occupancy: use pending_class_group_id if set, else class_group_id.
+            // This correctly excludes students staged OUT of this class and includes those staged IN.
+            $effectiveCount = ClassStudent::whereRaw(
+                'COALESCE(pending_class_group_id, class_group_id) = ?',
+                [$classGroup->id]
+            )->where('student_id', '!=', $student->id)->count();
 
             abort_if(
-                $liveCount + $pendingCount >= $classGroup->capacity,
+                $effectiveCount >= $classGroup->capacity,
                 422,
                 'Kapasitas kelas tujuan sudah penuh.'
             );

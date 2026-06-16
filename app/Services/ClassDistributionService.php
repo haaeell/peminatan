@@ -79,16 +79,14 @@ class ClassDistributionService
                 abort(422, 'Kelas sudah dikunci.');
             }
 
-            // Count both live occupants and other students already staged into this class.
-            $liveCount = $classGroup->students()
-                ->where('student_id', '!=', $studentId)
-                ->count();
+            // Effective occupancy: use pending_class_group_id if set, else class_group_id.
+            // This correctly excludes students staged OUT of this class and includes those staged IN.
+            $effectiveCount = ClassStudent::whereRaw(
+                'COALESCE(pending_class_group_id, class_group_id) = ?',
+                [$classGroup->id]
+            )->where('student_id', '!=', $studentId)->count();
 
-            $pendingCount = ClassStudent::where('pending_class_group_id', $classGroup->id)
-                ->where('student_id', '!=', $studentId)
-                ->count();
-
-            if ($liveCount + $pendingCount >= $classGroup->capacity) {
+            if ($effectiveCount >= $classGroup->capacity) {
                 abort(422, 'Kapasitas kelas sudah penuh.');
             }
 
