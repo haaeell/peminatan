@@ -240,7 +240,7 @@ class ReportController extends Controller
     private function classDistributionReport(): array
     {
         $classStudents = ClassStudent::with([
-            'student',
+            'student.biodata',
             'classGroup',
             'pendingClassGroup',
             'package',
@@ -252,6 +252,7 @@ class ReportController extends Controller
             'Nama',
             'NISN',
             'Kelas Asal',
+            'Jenis Kelamin',
             'Kelas Penempatan',
             'Jurusan',
             'Jenis Penempatan',
@@ -269,6 +270,11 @@ class ReportController extends Controller
                     $item->student?->name ?: '-',
                     $item->student?->nisn ?: '-',
                     $item->student?->origin_class ?: '-',
+                    match($item->student?->biodata?->gender) {
+                        'L' => 'Laki-laki',
+                        'P' => 'Perempuan',
+                        default => '-',
+                    },
                     $effectiveClass?->name ?: '-',
                     $effectivePackage?->name ?: '-',
                     $item->is_manual_override ? 'Manual' : 'Otomatis',

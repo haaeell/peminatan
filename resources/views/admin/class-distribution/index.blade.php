@@ -188,8 +188,8 @@
                             </div>
 
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-1.5">
-                                    <span class="text-sm font-extrabold text-slate-900 truncate">
+                                <div class="flex items-center gap-1.5 min-w-0">
+                                    <span class="text-xs font-bold text-slate-900 truncate">
                                         {{ $item->student->name }}
                                     </span>
                                     @if($item->student->biodata?->gender)
