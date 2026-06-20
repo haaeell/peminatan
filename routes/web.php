@@ -227,6 +227,9 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::put('/settings', [SettingController::class, 'update'])
             ->name('settings.update');
+
+        Route::put('/settings/password', [SettingController::class, 'updatePassword'])
+            ->name('settings.password');
     });
 
 /*
